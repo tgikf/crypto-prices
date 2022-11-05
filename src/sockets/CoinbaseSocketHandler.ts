@@ -1,34 +1,52 @@
 import FormattedPriceUpdate from "./FormattedPriceUpdate";
 import GenericSocketHandler from "./GenericSocketHandler";
+import SocketHandlers from "./SocketHandlers";
 
 class CoinbaseSocketHandler extends GenericSocketHandler {
-  provider = "Coinbase";
+  provider = SocketHandlers.COINBASE;
 
-  connect(): void {
+  constructor() {
+    super();
     this.socket = new WebSocket(`wss://ws-feed.exchange.coinbase.com`);
     this.socket.onopen = (e) => {
-      console.log(`${this.symbol} opened on ${this.provider}`, e);
-      const productId = `${this.symbol.slice(0, 3)}-${this.symbol.slice(
-        3
-      )}`.toUpperCase();
-      this.socket.send(
-        JSON.stringify({
-          type: "subscribe",
-          channels: [
-            "level2",
-            {
-              name: "ticker",
-              product_ids: [productId],
-            },
-          ],
-        })
-      );
+      console.debug(`Socket with ${this.provider} opened`, e);
     };
+
     this.socket.onmessage = (message) => {
-      console.log(`message for ${this.symbol} from ${this.provider}`, message);
-      const priceData = JSON.parse(message.data);
-      postMessage(JSON.stringify(this.getFormattedPriceUpdate(priceData)));
+      console.debug(`message from ${this.provider}`, message);
+      const socketMessage = JSON.parse(message.data);
+      if (this.isRelevant(socketMessage)) {
+        postMessage(
+          JSON.stringify(this.getFormattedPriceUpdate(socketMessage))
+        );
+      }
     };
+  }
+
+  subscribe(symbol: string): void {
+    const productId = `${symbol.slice(0, 3)}-${symbol.slice(3)}`;
+    const message = JSON.stringify({
+      type: "subscribe",
+      product_ids: [productId],
+      channels: ["ticker"],
+    });
+    console.debug(`Subscribing to ${symbol} level2 on ${this.provider}`);
+    this.socket.send(message);
+  }
+
+  unsubscribe(symbol: string): void {
+    const productId = `${symbol.slice(0, 3)}-${symbol.slice(3)}`;
+    const message = JSON.stringify({
+      type: "unsubscribe",
+      product_ids: [productId],
+      channels: ["ticker"],
+    });
+    console.debug(`Unsubscribing from ${symbol} level2 on ${this.provider}`);
+    this.socket.send(message);
+  }
+
+  isRelevant(message: any) {
+    return message.type === "ticker";
   }
 
   isUpdateDue(unformatted: string): boolean {
@@ -37,7 +55,7 @@ class CoinbaseSocketHandler extends GenericSocketHandler {
 
   getFormattedPriceUpdate(data: any): FormattedPriceUpdate {
     return {
-      symbol: this.symbol,
+      symbol: data.product_id.replaceAll("-", ""),
       provider: this.provider,
       bid: data.best_bid,
       ask: data.best_ask,

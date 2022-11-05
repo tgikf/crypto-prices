@@ -3,9 +3,10 @@ import FormattedPriceUpdate from "./FormattedPriceUpdate";
 abstract class GenericSocketHandler {
   protected socket: WebSocket;
   protected readonly provider: string;
-  constructor(protected readonly symbol: string) {}
-
-  abstract connect(): void;
+  protected subscribedSymbols: string[];
+  abstract subscribe(symbol: string): void;
+  abstract unsubscribe(symbol: string): void;
+  abstract isRelevant(message: any): boolean;
   abstract isUpdateDue(unformatted: any): boolean;
   abstract getFormattedPriceUpdate(unformatted: any): FormattedPriceUpdate;
 }

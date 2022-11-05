@@ -29,6 +29,7 @@ https://docs.cloud.coinbase.com/exchange/docs/websocket-overview
 
 > wss://ws-feed.exchange.coinbase.com
 
+Ticker is only every second, but easier to parse update. `level2_batch` will send an update and then only changes (more sophisticated parsing required).
 Example message:
 
 ```
