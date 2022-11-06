@@ -17,9 +17,9 @@ const instrumentWorkers: Worker[] = [];
 const App = () => {
   const [instruments, setInstruments] = createSignal<{
     [symbol: string]: {
-      bid: number;
+      bid: string;
       bidProvider: string;
-      ask: number;
+      ask: string;
       askProvider: string;
       providers: string[];
     };
@@ -47,7 +47,6 @@ const App = () => {
     );
 
     worker.onmessage = (e) => {
-      console.debug("receiveeed", e.data);
       const workerMessage = e.data; //JSON.parse(e.data);
       switch (workerMessage.operation) {
         case WorkerMessageOperations.SOCKET_READY:
@@ -113,7 +112,6 @@ const App = () => {
         </Box>
 
         {Object.entries(instruments()).map(([key, value]) => {
-          console.log("value for", key, "is", value);
           return <Instrument symbol={key} price={value} />;
         })}
       </Box>

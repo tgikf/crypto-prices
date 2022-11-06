@@ -2,11 +2,12 @@ import ProviderPrice from "./ProviderPrice";
 import GenericSocketHandler from "./GenericSocketHandler";
 import SocketHandlers from "./SocketHandlers";
 
-class BinanceSocketHandler extends GenericSocketHandler {
-  provider = SocketHandlers.BINANCE;
+class CoinFlexSocketHandler extends GenericSocketHandler {
+  provider = SocketHandlers.COINFLEX;
+
   constructor() {
     super();
-    this.socket = new WebSocket(`wss://stream.binance.com:443/ws`);
+    this.socket = new WebSocket(`wss://v2api.coinflex.com/v2/websocket`);
     this.socket.onopen = (e) => {
       console.debug(`Socket with ${this.provider} opened`, e);
     };
@@ -21,27 +22,33 @@ class BinanceSocketHandler extends GenericSocketHandler {
   }
 
   subscribe(symbol: string): void {
+    const productId = `${symbol.slice(0, 3)}-${symbol.slice(3)}`;
     const message = JSON.stringify({
-      method: "SUBSCRIBE",
-      params: [`${symbol.toLowerCase()}@bookTicker`],
-      id: 1,
+      op: "subscribe",
+      tag: 103,
+      args: [`depth:${productId}-SWAP-LIN`],
     });
-    console.debug(`Subscribing to ${symbol}@bookTicker on ${this.provider}`);
+    console.debug(`Subscribing to ${symbol} on ${this.provider}`);
     this.socket.send(message);
   }
 
   unsubscribe(symbol: string): void {
+    const productId = `${symbol.slice(0, 3)}-${symbol.slice(3)}`;
     const message = JSON.stringify({
-      method: "UNSUBSCRIBE",
-      params: [`${symbol.toLowerCase()}@bookTicker`],
-      id: 1,
+      op: "unsubscribe",
+      tag: 103,
+      args: [`depth:${productId}-SWAP-LIN`],
     });
-    console.debug(`Subscribing to ${symbol}@bookTicker on ${this.provider}`);
+    console.debug(`Unsubscribing from ${symbol} on ${this.provider}`);
     this.socket.send(message);
   }
 
   isRelevant(message: any) {
-    return message.s !== undefined;
+    return (
+      message.table === "depth" &&
+      message.data?.bids?.length > 0 &&
+      message.data?.asks?.length > 0
+    );
   }
 
   isUpdateDue(unformatted: string): boolean {
@@ -50,12 +57,12 @@ class BinanceSocketHandler extends GenericSocketHandler {
 
   getFormattedPriceUpdate(data: any): ProviderPrice {
     return {
-      symbol: data.s,
+      symbol: data.data.marketCode.substring(0, 7).replaceAll("-", ""),
       provider: this.provider,
-      bid: data.b,
-      ask: data.a,
+      bid: data.data.bids[0][0],
+      ask: data.data.asks[0][0],
     };
   }
 }
 
-export default BinanceSocketHandler;
+export default CoinFlexSocketHandler;

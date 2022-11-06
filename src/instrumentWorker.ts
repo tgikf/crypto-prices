@@ -1,4 +1,10 @@
 //@ts-ignore
+import("./global").then(({ default: LOG_LEVEL_DEBUG }) => {
+  if (!LOG_LEVEL_DEBUG) {
+    self.console.debug = () => {};
+  }
+});
+
 Promise.all([
   import("./initializeSocketWorkers"),
   import("./WorkerMessageOperations"),
@@ -8,9 +14,9 @@ Promise.all([
     { default: WorkerMessageOperations },
   ]) => {
     const instrumentData: {
-      bid?: number;
+      bid?: string;
       bidProvider?: string;
-      ask?: number;
+      ask?: string;
       askProvider?: string;
       providers: string[];
     } = { providers: [] };
@@ -25,14 +31,14 @@ Promise.all([
 
       // Bid is better if larger
       if (!instrumentData.bid || bid > instrumentData.bid) {
-        instrumentData.bid = bid;
+        instrumentData.bid = Number(bid).toFixed(4);
         instrumentData.bidProvider = provider;
         eventRelevant = true;
       }
 
       // Ask is better if smaller
       if (!instrumentData.ask || ask < instrumentData.ask) {
-        instrumentData.ask = ask;
+        instrumentData.ask = Number(ask).toFixed(4);
         instrumentData.askProvider = provider;
         eventRelevant = true;
       }
@@ -63,7 +69,7 @@ Promise.all([
     (can it be resolved by separate imports inside async function?)*/
     setTimeout(() => {
       postMessage({ operation: WorkerMessageOperations.SOCKET_READY });
-    }, 50);
+    }, 200);
 
     onmessage = (e: MessageEvent) => {
       if (e.data.operation === WorkerMessageOperations.TERMINATE_WORKER) {

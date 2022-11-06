@@ -13,9 +13,9 @@ import InfoIcon from "@suid/icons-material/Info";
 const Instrument = (props: {
   symbol: string;
   price: {
-    bid: number;
+    bid: string;
     bidProvider: string;
-    ask: number;
+    ask: string;
     askProvider: string;
     providers: string[];
   };

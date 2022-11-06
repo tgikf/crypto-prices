@@ -2,11 +2,11 @@ import ProviderPrice from "./ProviderPrice";
 import GenericSocketHandler from "./GenericSocketHandler";
 import SocketHandlers from "./SocketHandlers";
 
-class BinanceSocketHandler extends GenericSocketHandler {
-  provider = SocketHandlers.BINANCE;
+class BitmexSocketHandler extends GenericSocketHandler {
+  provider = SocketHandlers.BITMEX;
   constructor() {
     super();
-    this.socket = new WebSocket(`wss://stream.binance.com:443/ws`);
+    this.socket = new WebSocket(`wss://ws.bitmex.com/realtime`);
     this.socket.onopen = (e) => {
       console.debug(`Socket with ${this.provider} opened`, e);
     };
@@ -22,26 +22,28 @@ class BinanceSocketHandler extends GenericSocketHandler {
 
   subscribe(symbol: string): void {
     const message = JSON.stringify({
-      method: "SUBSCRIBE",
-      params: [`${symbol.toLowerCase()}@bookTicker`],
-      id: 1,
+      op: "subscribe",
+      args: [`orderBook10:${symbol.replaceAll("BTC", "XBT")}`],
     });
-    console.debug(`Subscribing to ${symbol}@bookTicker on ${this.provider}`);
+    console.debug(`Subscribing to ${symbol} on ${this.provider}`);
     this.socket.send(message);
   }
 
   unsubscribe(symbol: string): void {
     const message = JSON.stringify({
-      method: "UNSUBSCRIBE",
-      params: [`${symbol.toLowerCase()}@bookTicker`],
-      id: 1,
+      op: "unsubscribe",
+      args: [`orderBook10:${symbol.replaceAll("BTC", "XBT")}`],
     });
     console.debug(`Subscribing to ${symbol}@bookTicker on ${this.provider}`);
     this.socket.send(message);
   }
 
   isRelevant(message: any) {
-    return message.s !== undefined;
+    return (
+      message.table === "orderBook10" &&
+      message.data[0]?.bids?.length > 0 &&
+      message.data[0]?.asks?.length > 0
+    );
   }
 
   isUpdateDue(unformatted: string): boolean {
@@ -50,12 +52,12 @@ class BinanceSocketHandler extends GenericSocketHandler {
 
   getFormattedPriceUpdate(data: any): ProviderPrice {
     return {
-      symbol: data.s,
+      symbol: data.data[0].symbol.replaceAll("XBT", "BTC"),
       provider: this.provider,
-      bid: data.b,
-      ask: data.a,
+      bid: data.data[0].bids[0][0],
+      ask: data.data[0].asks[0][0],
     };
   }
 }
 
-export default BinanceSocketHandler;
+export default BitmexSocketHandler;
