@@ -1,4 +1,4 @@
-import FormattedPriceUpdate from "./FormattedPriceUpdate";
+import ProviderPrice from "./ProviderPrice";
 import GenericSocketHandler from "./GenericSocketHandler";
 import SocketHandlers from "./SocketHandlers";
 
@@ -16,9 +16,7 @@ class CoinbaseSocketHandler extends GenericSocketHandler {
       console.debug(`message from ${this.provider}`, message);
       const socketMessage = JSON.parse(message.data);
       if (this.isRelevant(socketMessage)) {
-        postMessage(
-          JSON.stringify(this.getFormattedPriceUpdate(socketMessage))
-        );
+        postMessage(this.getFormattedPriceUpdate(socketMessage));
       }
     };
   }
@@ -53,7 +51,7 @@ class CoinbaseSocketHandler extends GenericSocketHandler {
     return true;
   }
 
-  getFormattedPriceUpdate(data: any): FormattedPriceUpdate {
+  getFormattedPriceUpdate(data: any): ProviderPrice {
     return {
       symbol: data.product_id.replaceAll("-", ""),
       provider: this.provider,

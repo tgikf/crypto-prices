@@ -3,6 +3,7 @@ enum WorkerMessageOperations {
   TERMINATE_WORKER,
   SUBSCRIBE_FEED,
   UNSUBSCRIBE_FEED,
+  PRICE_UPDATE,
 }
 
 export default WorkerMessageOperations;

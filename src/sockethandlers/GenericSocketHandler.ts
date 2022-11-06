@@ -1,4 +1,4 @@
-import FormattedPriceUpdate from "./FormattedPriceUpdate";
+import ProviderPrice from "./ProviderPrice";
 
 abstract class GenericSocketHandler {
   protected socket: WebSocket;
@@ -8,7 +8,7 @@ abstract class GenericSocketHandler {
   abstract unsubscribe(symbol: string): void;
   abstract isRelevant(message: any): boolean;
   abstract isUpdateDue(unformatted: any): boolean;
-  abstract getFormattedPriceUpdate(unformatted: any): FormattedPriceUpdate;
+  abstract getFormattedPriceUpdate(unformatted: any): ProviderPrice;
 
   sleep = (ms: number) => {
     return new Promise((resolve) => setTimeout(resolve, ms));

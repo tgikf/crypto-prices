@@ -4,7 +4,6 @@ import Switch from "@suid/material/Switch";
 import Typography from "@suid/material/Typography";
 import Instrument from "./components/Instrument";
 import Box from "@suid/material/Box";
-import FormattedPriceUpdate from "./sockethandlers/FormattedPriceUpdate";
 import WorkerMessageOperations from "./WorkerMessageOperations";
 
 const darkTheme = createTheme({
@@ -16,28 +15,17 @@ const darkTheme = createTheme({
 const instrumentWorkers: Worker[] = [];
 
 const App = () => {
-  const [subscriptions, setSubscriptions] = createSignal<{
-    [pair: string]: { [provider: string]: FormattedPriceUpdate };
-  }>({});
-
   const [instruments, setInstruments] = createSignal<{
-    [symbol: string]: FormattedPriceUpdate;
+    [symbol: string]: {
+      bid: number;
+      bidProvider: string;
+      ask: number;
+      askProvider: string;
+      providers: string[];
+    };
   }>({});
 
   const supportedSymbols = ["BTCEUR", "ETHBTC", "BTCUSDT", "ETHUSD", "ETHUSDT"];
-
-  const processSocketEvent = (e: MessageEvent) => {
-    const priceData: FormattedPriceUpdate = JSON.parse(e.data);
-    if (priceData.symbol !== undefined) {
-      setSubscriptions({
-        ...subscriptions(),
-        [priceData.symbol]: {
-          ...subscriptions()[priceData.symbol],
-          [priceData.provider]: priceData,
-        },
-      });
-    }
-  };
 
   const terminateInstrumentWorker = (symbol: string) => {
     if (instrumentWorkers[symbol] === undefined) {
@@ -59,32 +47,29 @@ const App = () => {
     );
 
     worker.onmessage = (e) => {
-      const workerMessage = JSON.parse(e.data);
-      if (workerMessage.operation === WorkerMessageOperations.SOCKET_READY) {
-        worker.postMessage({
-          operation: WorkerMessageOperations.SUBSCRIBE_FEED,
-          symbol,
-        });
-      } else if (workerMessage.symobl && workerMessage.provider) {
-        setInstruments({ ...instruments(), [symbol]: workerMessage });
+      console.debug("receiveeed", e.data);
+      const workerMessage = e.data; //JSON.parse(e.data);
+      switch (workerMessage.operation) {
+        case WorkerMessageOperations.SOCKET_READY:
+          worker.postMessage({
+            operation: WorkerMessageOperations.SUBSCRIBE_FEED,
+            symbol,
+          });
+          break;
+        case WorkerMessageOperations.PRICE_UPDATE:
+          console.debug("received bestprice update", workerMessage.data);
+          setInstruments({ ...instruments(), [symbol]: workerMessage.data });
+          break;
+        default:
+          console.error(
+            `Received invalid operation ${workerMessage.operation}`,
+            workerMessage
+          );
+          break;
       }
     };
 
     instrumentWorkers[symbol] = worker;
-
-    /*
-    Object.entries(workers).forEach(([handler, worker]) => {
-      worker.postMessage({
-        handler,
-        operation: add
-          ? SocketHandlerOperations.SUBSCRIBE
-          : SocketHandlerOperations.UNSUBSCRIBE,
-        symbol,
-      });
-    });
-    if (!add) {
-      setSubscriptions({ ...subscriptions(), [symbol]: undefined });
-    }*/
   };
 
   return (
@@ -127,9 +112,9 @@ const App = () => {
           ))}
         </Box>
 
-        {Object.entries(subscriptions()).map(([key, value]) => {
-          console.debug("value for", key, "is", value, subscriptions());
-          return <Instrument symbol={key} prices={value} />;
+        {Object.entries(instruments()).map(([key, value]) => {
+          console.log("value for", key, "is", value);
+          return <Instrument symbol={key} price={value} />;
         })}
       </Box>
     </ThemeProvider>

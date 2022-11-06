@@ -7,19 +7,65 @@ Promise.all([
     { default: initializeSocketWorkers },
     { default: WorkerMessageOperations },
   ]) => {
+    const instrumentData: {
+      bid?: number;
+      bidProvider?: string;
+      ask?: number;
+      askProvider?: string;
+      providers: string[];
+    } = { providers: [] };
+
+    const instrumentDataChanged = (priceData: any): boolean => {
+      const { symbol, provider, ask, bid } = priceData;
+      let eventRelevant = false;
+
+      if (!symbol || !provider || !ask || !bid) {
+        return false;
+      }
+
+      // Bid is better if larger
+      if (!instrumentData.bid || bid > instrumentData.bid) {
+        instrumentData.bid = bid;
+        instrumentData.bidProvider = provider;
+        eventRelevant = true;
+      }
+
+      // Ask is better if smaller
+      if (!instrumentData.ask || ask < instrumentData.ask) {
+        instrumentData.ask = ask;
+        instrumentData.askProvider = provider;
+        eventRelevant = true;
+      }
+
+      if (
+        instrumentData.providers.length <= 0 ||
+        !instrumentData.providers.includes(provider)
+      ) {
+        instrumentData.providers.push(provider);
+        eventRelevant = true;
+      }
+
+      return eventRelevant;
+    };
+
     const processSocketEvent = (e: MessageEvent): void => {
-      const priceData = JSON.parse(e.data);
-      console.log("handleDataUpdate", priceData);
+      if (instrumentDataChanged(e.data)) {
+        postMessage({
+          operation: WorkerMessageOperations.PRICE_UPDATE,
+          data: instrumentData,
+        });
+      }
     };
 
     const socketWorkers = initializeSocketWorkers(processSocketEvent);
+    /*TODO: fix delay in worker spawning and remove settimeout
+    appears to be connected to the imports inside the worker 
+    (can it be resolved by separate imports inside async function?)*/
     setTimeout(() => {
-      postMessage(
-        JSON.stringify({ operation: WorkerMessageOperations.SOCKET_READY })
-      );
-    }, 25); //TODO: for some reason the workers need more time to get ready
+      postMessage({ operation: WorkerMessageOperations.SOCKET_READY });
+    }, 50);
 
-    onmessage = async (e: MessageEvent) => {
+    onmessage = (e: MessageEvent) => {
       if (e.data.operation === WorkerMessageOperations.TERMINATE_WORKER) {
         Object.values(socketWorkers).forEach((worker) => worker.terminate());
         this.close();

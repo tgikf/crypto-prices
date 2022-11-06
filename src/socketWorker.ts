@@ -36,7 +36,7 @@ Promise.all([
           SocketHandler.unsubscribe(symbol);
           break;
         default:
-          console.debug(`Received invalid operation ${operation}`);
+          console.error(`Received invalid operation ${operation}`);
       }
     };
   }

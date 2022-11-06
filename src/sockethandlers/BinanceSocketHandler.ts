@@ -1,5 +1,5 @@
 import { InsertInvitationOutlined } from "@suid/icons-material";
-import FormattedPriceUpdate from "./FormattedPriceUpdate";
+import ProviderPrice from "./ProviderPrice";
 import GenericSocketHandler from "./GenericSocketHandler";
 import SocketHandlers from "./SocketHandlers";
 
@@ -16,9 +16,7 @@ class BinanceSocketHandler extends GenericSocketHandler {
       console.debug(`message from ${this.provider}`, message);
       const socketMessage = JSON.parse(message.data);
       if (this.isRelevant(socketMessage)) {
-        postMessage(
-          JSON.stringify(this.getFormattedPriceUpdate(socketMessage))
-        );
+        postMessage(this.getFormattedPriceUpdate(socketMessage));
       }
     };
   }
@@ -51,7 +49,7 @@ class BinanceSocketHandler extends GenericSocketHandler {
     return true;
   }
 
-  getFormattedPriceUpdate(data: any): FormattedPriceUpdate {
+  getFormattedPriceUpdate(data: any): ProviderPrice {
     return {
       symbol: data.s,
       provider: this.provider,

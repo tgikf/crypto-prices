@@ -1,8 +1,8 @@
-type FormattedPriceUpdate = {
+type ProviderPrice = {
   symbol: string;
   provider: string;
   bid: string;
   ask: string;
 };
 
-export default FormattedPriceUpdate;
+export default ProviderPrice;
