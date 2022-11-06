@@ -1,5 +1,4 @@
 import SocketHandlers from "./sockethandlers/SocketHandlers";
-import SocketHandlerOperations from "./sockethandlers/SocketHandlerOperations";
 
 const initializeSocketWorkers = (
   onMessageCallback: (e: MessageEvent) => void

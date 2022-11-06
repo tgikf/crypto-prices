@@ -1,50 +1,43 @@
 //@ts-ignore
-let SocketHandler = undefined;
-//@ts-ignore
-onmessage = async (e: MessageEvent<string>) => {
-  console.debug(
-    "received message socket worker",
-    e,
-    "sockethandler is",
-    SocketHandler
-  );
+Promise.all([
+  import("./sockethandlers/BinanceSocketHandler"),
+  import("./sockethandlers/CoinbaseSocketHandler"),
+  import("./WorkerMessageOperations"),
+  import("./sockethandlers/SocketHandlers"),
+]).then(
+  ([
+    { default: BinanceSocketHandler },
+    { default: CoinbaseSocketHandler },
+    { default: WorkerMessageOperations },
+    { default: SocketHandlers },
+  ]) => {
+    let SocketHandler = undefined;
+    onmessage = async (e: MessageEvent) => {
+      const handlers = {
+        [SocketHandlers.BINANCE]: BinanceSocketHandler,
+        [SocketHandlers.COINBASE]: CoinbaseSocketHandler,
+      };
 
-  const { default: BinanceSocketHandler } = await import(
-    "./sockethandlers/BinanceSocketHandler"
-  );
-  const { default: CoinbaseSocketHandler } = await import(
-    "./sockethandlers/CoinbaseSocketHandler"
-  );
-  const { default: SocketHandlers } = await import(
-    "./sockethandlers/SocketHandlers"
-  );
-  const { default: SocketHandlerOperations } = await import(
-    "./sockethandlers/SocketHandlerOperations"
-  );
+      const { handler, operation, symbol } = e.data as unknown as {
+        handler: string;
+        operation: number;
+        symbol?: string;
+      };
 
-  const handlers = {
-    [SocketHandlers.BINANCE]: BinanceSocketHandler,
-    [SocketHandlers.COINBASE]: CoinbaseSocketHandler,
-  };
-
-  const { handler, operation, symbol } = e.data as unknown as {
-    handler: string;
-    operation: number;
-    symbol?: string;
-  };
-
-  if (SocketHandler === undefined) {
-    SocketHandler = new handlers[handler]();
-    await SocketHandler.waitForReadyState();
+      if (SocketHandler === undefined) {
+        SocketHandler = new handlers[handler]();
+        await SocketHandler.waitForReadyState();
+      }
+      switch (operation) {
+        case WorkerMessageOperations.SUBSCRIBE_FEED:
+          SocketHandler.subscribe(symbol);
+          break;
+        case WorkerMessageOperations.UNSUBSCRIBE_FEED:
+          SocketHandler.unsubscribe(symbol);
+          break;
+        default:
+          console.debug(`Received invalid operation ${operation}`);
+      }
+    };
   }
-  switch (operation) {
-    case SocketHandlerOperations.SUBSCRIBE:
-      SocketHandler.subscribe(symbol);
-      break;
-    case SocketHandlerOperations.UNSUBSCRIBE:
-      SocketHandler.unsubscribe(symbol);
-      break;
-    default:
-      console.debug(`Received invalid operation ${operation}`);
-  }
-};
+);

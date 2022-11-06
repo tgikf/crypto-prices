@@ -5,7 +5,7 @@ import Typography from "@suid/material/Typography";
 import Instrument from "./components/Instrument";
 import Box from "@suid/material/Box";
 import FormattedPriceUpdate from "./sockethandlers/FormattedPriceUpdate";
-import SocketHandlerOperations from "./sockethandlers/SocketHandlerOperations";
+import WorkerMessageOperations from "./WorkerMessageOperations";
 
 const darkTheme = createTheme({
   palette: {
@@ -39,8 +39,18 @@ const App = () => {
     }
   };
 
+  const terminateInstrumentWorker = (symbol: string) => {
+    if (instrumentWorkers[symbol] === undefined) {
+      return;
+    }
+    instrumentWorkers[symbol].postMessage({
+      operation: WorkerMessageOperations.TERMINATE_WORKER,
+    });
+    instrumentWorkers[symbol] = undefined;
+  };
+
   const spawnInstrumentWorker = (symbol: string) => {
-    if (instrumentWorkers[symbol]) {
+    if (instrumentWorkers[symbol] !== undefined) {
       instrumentWorkers[symbol].terminate();
     }
 
@@ -50,9 +60,9 @@ const App = () => {
 
     worker.onmessage = (e) => {
       const workerMessage = JSON.parse(e.data);
-      if (workerMessage.message === "WORKER_READY") {
+      if (workerMessage.operation === WorkerMessageOperations.SOCKET_READY) {
         worker.postMessage({
-          operation: SocketHandlerOperations.SUBSCRIBE,
+          operation: WorkerMessageOperations.SUBSCRIBE_FEED,
           symbol,
         });
       } else if (workerMessage.symobl && workerMessage.provider) {
@@ -60,7 +70,8 @@ const App = () => {
       }
     };
 
-    console.log("done already");
+    instrumentWorkers[symbol] = worker;
+
     /*
     Object.entries(workers).forEach(([handler, worker]) => {
       worker.postMessage({
@@ -106,7 +117,11 @@ const App = () => {
               </Typography>
               <Switch
                 value={symbol}
-                onChange={() => spawnInstrumentWorker(symbol)}
+                onChange={() =>
+                  instrumentWorkers[symbol] !== undefined
+                    ? terminateInstrumentWorker(symbol)
+                    : spawnInstrumentWorker(symbol)
+                }
               />
             </Box>
           ))}
