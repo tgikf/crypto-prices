@@ -31,14 +31,14 @@ Promise.all([
 
       // Bid is better if larger
       if (!instrumentData.bid || bid > instrumentData.bid) {
-        instrumentData.bid = Number(bid).toFixed(4);
+        instrumentData.bid = Number(bid).toFixed(5);
         instrumentData.bidProvider = provider;
         eventRelevant = true;
       }
 
       // Ask is better if smaller
       if (!instrumentData.ask || ask < instrumentData.ask) {
-        instrumentData.ask = Number(ask).toFixed(4);
+        instrumentData.ask = Number(ask).toFixed(5);
         instrumentData.askProvider = provider;
         eventRelevant = true;
       }
@@ -69,7 +69,7 @@ Promise.all([
     (can it be resolved by separate imports inside async function?)*/
     setTimeout(() => {
       postMessage({ operation: WorkerMessageOperations.SOCKET_READY });
-    }, 200);
+    }, 100);
 
     onmessage = (e: MessageEvent) => {
       if (e.data.operation === WorkerMessageOperations.TERMINATE_WORKER) {

@@ -10,6 +10,15 @@ const darkTheme = createTheme({
   palette: {
     mode: "dark",
   },
+  typography: {
+    fontFamily: "Roboto",
+    body2: {
+      fontSize: "1.2rem",
+      fontWeight: "bold",
+      fontFamily: "Noto Sans",
+      letterSpacing: "0px",
+    },
+  },
 });
 
 const instrumentWorkers: Worker[] = [];
@@ -35,6 +44,7 @@ const App = () => {
       operation: WorkerMessageOperations.TERMINATE_WORKER,
     });
     instrumentWorkers[symbol] = undefined;
+    setInstruments({ ...instruments(), [symbol]: undefined });
   };
 
   const spawnInstrumentWorker = (symbol: string) => {
@@ -110,10 +120,18 @@ const App = () => {
             </Box>
           ))}
         </Box>
-
-        {Object.entries(instruments()).map(([key, value]) => {
-          return <Instrument symbol={key} price={value} />;
-        })}
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            flexWrap: "wrap",
+            gap: "1rem",
+          }}
+        >
+          {Object.entries(instruments()).map(([key, value]) =>
+            value ? <Instrument symbol={key} price={value} /> : <></>
+          )}
+        </Box>
       </Box>
     </ThemeProvider>
   );
