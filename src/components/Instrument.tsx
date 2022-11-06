@@ -9,7 +9,7 @@ import Typography from "@suid/material/Typography";
 import MoreVertIcon from "@suid/icons-material/MoreVert";
 import FavoriteIcon from "@suid/icons-material/Favorite";
 import InfoIcon from "@suid/icons-material/Info";
-import FormattedPriceUpdate from "../sockets/FormattedPriceUpdate";
+import FormattedPriceUpdate from "../sockethandlers/FormattedPriceUpdate";
 
 const Instrument = (props: {
   symbol: string;

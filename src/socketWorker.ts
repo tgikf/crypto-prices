@@ -1,18 +1,25 @@
 //@ts-ignore
-let socketHandler = undefined;
+let SocketHandler = undefined;
 //@ts-ignore
 onmessage = async (e: MessageEvent<string>) => {
-  console.debug("event", e);
+  console.debug(
+    "received message socket worker",
+    e,
+    "sockethandler is",
+    SocketHandler
+  );
 
   const { default: BinanceSocketHandler } = await import(
-    "./sockets/BinanceSocketHandler"
+    "./sockethandlers/BinanceSocketHandler"
   );
   const { default: CoinbaseSocketHandler } = await import(
-    "./sockets/CoinbaseSocketHandler"
+    "./sockethandlers/CoinbaseSocketHandler"
   );
-  const { default: SocketHandlers } = await import("./sockets/SocketHandlers");
+  const { default: SocketHandlers } = await import(
+    "./sockethandlers/SocketHandlers"
+  );
   const { default: SocketHandlerOperations } = await import(
-    "./sockets/SocketHandlerOperations"
+    "./sockethandlers/SocketHandlerOperations"
   );
 
   const handlers = {
@@ -21,21 +28,21 @@ onmessage = async (e: MessageEvent<string>) => {
   };
 
   const { handler, operation, symbol } = e.data as unknown as {
-    handler: number;
+    handler: string;
     operation: number;
     symbol?: string;
   };
 
-  console.debug("about to instantiate:(", handler, operation, symbol);
-  if (socketHandler === undefined) {
-    socketHandler = new handlers[handler]();
+  if (SocketHandler === undefined) {
+    SocketHandler = new handlers[handler]();
+    await SocketHandler.waitForReadyState();
   }
   switch (operation) {
     case SocketHandlerOperations.SUBSCRIBE:
-      socketHandler.subscribe(symbol);
+      SocketHandler.subscribe(symbol);
       break;
     case SocketHandlerOperations.UNSUBSCRIBE:
-      socketHandler.unsubscribe(symbol);
+      SocketHandler.unsubscribe(symbol);
       break;
     default:
       console.debug(`Received invalid operation ${operation}`);

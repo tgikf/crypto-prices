@@ -1,5 +1,5 @@
 enum SocketHandlerOperations {
-  CONNECT,
+  INSTANTIATE,
   SUBSCRIBE,
   UNSUBSCRIBE,
 }

@@ -1,13 +1,11 @@
 import { createSignal } from "solid-js";
 import { ThemeProvider, createTheme } from "@suid/material/styles";
-import Grid from "@suid/material/Grid";
 import Switch from "@suid/material/Switch";
 import Typography from "@suid/material/Typography";
 import Instrument from "./components/Instrument";
 import Box from "@suid/material/Box";
-import FormattedPriceUpdate from "./sockets/FormattedPriceUpdate";
-import initializeWorkers from "./initializeWorkers";
-import SocketHandlerOperations from "./sockets/SocketHandlerOperations";
+import FormattedPriceUpdate from "./sockethandlers/FormattedPriceUpdate";
+import SocketHandlerOperations from "./sockethandlers/SocketHandlerOperations";
 
 const darkTheme = createTheme({
   palette: {
@@ -15,9 +13,15 @@ const darkTheme = createTheme({
   },
 });
 
+const instrumentWorkers: Worker[] = [];
+
 const App = () => {
   const [subscriptions, setSubscriptions] = createSignal<{
     [pair: string]: { [provider: string]: FormattedPriceUpdate };
+  }>({});
+
+  const [instruments, setInstruments] = createSignal<{
+    [symbol: string]: FormattedPriceUpdate;
   }>({});
 
   const supportedSymbols = ["BTCEUR", "ETHBTC", "BTCUSDT", "ETHUSD", "ETHUSDT"];
@@ -35,10 +39,29 @@ const App = () => {
     }
   };
 
-  const workers = initializeWorkers(processSocketEvent);
+  const spawnInstrumentWorker = (symbol: string) => {
+    if (instrumentWorkers[symbol]) {
+      instrumentWorkers[symbol].terminate();
+    }
 
-  const addOrRemoveSymbol = (add: boolean, symbol: string) => {
-    console.log("addOrRemove", add);
+    const worker = new Worker(
+      new URL("./instrumentWorker.ts", import.meta.url)
+    );
+
+    worker.onmessage = (e) => {
+      const workerMessage = JSON.parse(e.data);
+      if (workerMessage.message === "WORKER_READY") {
+        worker.postMessage({
+          operation: SocketHandlerOperations.SUBSCRIBE,
+          symbol,
+        });
+      } else if (workerMessage.symobl && workerMessage.provider) {
+        setInstruments({ ...instruments(), [symbol]: workerMessage });
+      }
+    };
+
+    console.log("done already");
+    /*
     Object.entries(workers).forEach(([handler, worker]) => {
       worker.postMessage({
         handler,
@@ -50,69 +73,50 @@ const App = () => {
     });
     if (!add) {
       setSubscriptions({ ...subscriptions(), [symbol]: undefined });
-    }
+    }*/
   };
 
   return (
     <ThemeProvider theme={darkTheme}>
-      <Grid
-        container
-        spacing={2}
-        sx={{ height: "100vh", bgcolor: "background.paper" }}
-      >
-        <Grid item xs={12} sm={3} md={2}>
-          <Typography variant="h5" color="text.primary">
-            Trading Pairs
-          </Typography>
-          <Box
-            sx={{
-              display: "flex",
-              flexWrap: "wrap",
-              justifyContent: "space-around",
-              gap: "0.2rem",
-            }}
-          >
-            {supportedSymbols.map((symbol) => (
-              <Box
-                sx={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  padding: "0 0.1rem 0 0.1rem",
-                  border: 1,
-                  borderColor: "primary.main",
-                  borderRadius: 1,
-                  width: "8rem",
-                }}
-              >
-                <Typography variant="button" color="text.secondary">
-                  {symbol}
-                </Typography>
-                <Switch
-                  value={symbol}
-                  onChange={() =>
-                    Object.keys(subscriptions()).includes(symbol)
-                      ? addOrRemoveSymbol(false, symbol)
-                      : addOrRemoveSymbol(true, symbol)
-                  }
-                />
-              </Box>
-            ))}
-          </Box>
-        </Grid>
-        <Grid
-          item
-          xs={12}
-          sm={9}
-          md={10}
-          sx={{ display: "flex", justifyContent: "center", gap: "3rem" }}
+      <Box sx={{ minHeight: "100vh", bgcolor: "background.paper" }}>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            flexWrap: "wrap",
+            gap: "1rem",
+            padding: "1rem 0 1rem 0",
+          }}
         >
-          {Object.entries(subscriptions()).map(([key, value]) => {
-            console.debug("value for", key, "is", value, subscriptions());
-            return <Instrument symbol={key} prices={value} />;
-          })}
-        </Grid>
-      </Grid>
+          {supportedSymbols.map((symbol) => (
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                padding: "0 0 0 0.5rem",
+                border: 1,
+                borderColor: "primary.main",
+                borderRadius: 1,
+                width: "8rem",
+              }}
+            >
+              <Typography variant="button" color="text.secondary">
+                {symbol}
+              </Typography>
+              <Switch
+                value={symbol}
+                onChange={() => spawnInstrumentWorker(symbol)}
+              />
+            </Box>
+          ))}
+        </Box>
+
+        {Object.entries(subscriptions()).map(([key, value]) => {
+          console.debug("value for", key, "is", value, subscriptions());
+          return <Instrument symbol={key} prices={value} />;
+        })}
+      </Box>
     </ThemeProvider>
   );
 };
