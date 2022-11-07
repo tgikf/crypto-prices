@@ -8,4 +8,5 @@ export default defineConfig({
   build: {
     target: "esnext",
   },
+  base: "/crypto-prices/",
 });
