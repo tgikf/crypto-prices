@@ -1,0 +1,1 @@
+var t=(e=>(e.BINANCE="Binance",e.COINBASE="Coinbase",e.COINFLEX="CoinFLEX",e.BITMEX="BitMEX",e))(t||{});const i=e=>{const o={};return Object.values(t).filter(r=>typeof r=="string").forEach(r=>{const s=new Worker(new URL("/crypto-prices/assets/socketWorker.c6240d91.js",self.location));s.onmessage=e,o[r]=s}),o};export{i as default};
