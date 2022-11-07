@@ -35,9 +35,11 @@ const BidAskCard = (props: {
     provider: string,
     position: "left" | "right"
   ) => {
+    const color = position === "left" ? "primary.main" : "secondary.main";
     return (
       <Box
         sx={{
+          bgcolor: color,
           width: "50%",
           [position === "left" ? "borderRight" : "borderLeft"]: 1,
           borderColor: "background.default",
@@ -46,13 +48,14 @@ const BidAskCard = (props: {
           flexDirection: "column",
           alignItems: "center",
           gap: "0.5rem",
+          transition: "background-color 1000ms step-end",
         }}
       >
         {highlightStart && highlightEnd ? (
           <Box>
             <Typography
               variant="body2"
-              color="background.default"
+              color={"background.default"}
               component="span"
             >
               {price.slice(0, highlightStart)}
@@ -102,7 +105,6 @@ const BidAskCard = (props: {
   return (
     <Card
       sx={{
-        bgcolor: "primary.main",
         display: "flex",
         justifyContent: "space-around",
         height: "6rem",
