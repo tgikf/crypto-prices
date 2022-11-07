@@ -10,6 +10,7 @@
   "dependencies": {
     "@suid/icons-material": "^0.4.1",
     "@suid/material": "^0.6.3",
+    "solid-bootstrap": "^1.0.8",
     "solid-js": "^1.5.7"
   },
   "devDependencies": {

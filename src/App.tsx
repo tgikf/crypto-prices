@@ -86,7 +86,7 @@ const App = () => {
 
   return (
     <ThemeProvider theme={darkTheme}>
-      <Box sx={{ minHeight: "100vh", bgcolor: "background.paper" }}>
+      <Box sx={{ minHeight: "100vh", bgcolor: "background.default" }}>
         <Box
           sx={{
             display: "flex",
@@ -131,7 +131,6 @@ const App = () => {
             gap: "1rem",
           }}
         >
-          {/*
           <Instrument
             symbol={"ETHABC"}
             price={{
@@ -151,7 +150,7 @@ const App = () => {
               askProvider: "Citi",
               providers: [],
             }}
-          /> */}
+          />
           {Object.entries(instruments()).map(([key, value]) =>
             value ? <Instrument symbol={key} price={value} /> : <></>
           )}
