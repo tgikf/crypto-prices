@@ -128,6 +128,27 @@ const App = () => {
             gap: "1rem",
           }}
         >
+          {/*
+          <Instrument
+            symbol={"ETHABC"}
+            price={{
+              bid: "21066.14020",
+              ask: "21067.34020",
+              bidProvider: "Benance",
+              askProvider: "Citi",
+              providers: [],
+            }}
+          />
+          <Instrument
+            symbol={"ETHDEF"}
+            price={{
+              bid: "21066.14020",
+              ask: "21066.14020",
+              bidProvider: "Benance",
+              askProvider: "Citi",
+              providers: [],
+            }}
+          /> */}
           {Object.entries(instruments()).map(([key, value]) =>
             value ? <Instrument symbol={key} price={value} /> : <></>
           )}

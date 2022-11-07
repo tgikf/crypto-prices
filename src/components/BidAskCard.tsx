@@ -35,75 +35,63 @@ const BidAskCard = (props: {
     provider: string,
     position: "left" | "right"
   ) => {
-    console.log(
-      "renderPrice",
-      price,
-      "start",
-      highlightStart,
-      "end",
-      highlightEnd,
-      price.slice(0, highlightStart),
-      price.slice(highlightStart, highlightEnd),
-      price.slice(highlightEnd)
-    );
     return (
       <Box
         sx={{
           width: "50%",
-          paddingTop: "7%",
           [position === "left" ? "borderRight" : "borderLeft"]: 1,
           borderColor: "background.default",
+          display: "flex",
+          justifyContent: "flex-end",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: "0.5rem",
         }}
       >
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          {highlightStart && highlightEnd ? (
-            <>
-              <Typography
-                variant="body2"
-                color="background.default"
-                sx={{ marginBlockEnd: -0.8 }}
-              >
-                {price.slice(0, highlightStart)}
-              </Typography>
-              <Typography
-                variant="body2"
-                color="background.default"
-                sx={{
-                  fontSize: "2em",
-                  marginBlockEnd: 0.5,
-                  marginLeft: "0.05em",
-                }}
-              >
-                {price.slice(highlightStart, highlightEnd)}
-              </Typography>
-              <Typography
-                variant="body2"
-                color="background.default"
-                sx={{ marginBlockEnd: -0.8 }}
-              >
-                {price.slice(highlightEnd)}
-              </Typography>
-            </>
-          ) : (
+        {highlightStart && highlightEnd ? (
+          <Box>
             <Typography
               variant="body2"
               color="background.default"
-              sx={{ marginBlockEnd: -0.8 }}
+              component="span"
             >
-              {price}
+              {price.slice(0, highlightStart)}
             </Typography>
-          )}
-        </Box>
+            <Typography
+              variant="body2"
+              color="background.default"
+              component="span"
+              sx={{
+                fontSize: "2em",
+                lineHeight: "1",
+              }}
+            >
+              {price.slice(highlightStart, highlightEnd)}
+            </Typography>
+            <Typography
+              variant="body2"
+              color="background.default"
+              component="span"
+            >
+              {price.slice(highlightEnd)}
+            </Typography>
+          </Box>
+        ) : (
+          <Typography
+            variant="body2"
+            color="background.default"
+            component="span"
+          >
+            {price}
+          </Typography>
+        )}
         <Typography
           variant="body1"
           color="background.default"
-          sx={{ float: position, padding: "0 0.8em 0 0.8em" }}
+          sx={{
+            alignSelf: position === "right" ? "flex-end" : "flex-start",
+            margin: "0 0.5em 0 0.5em",
+          }}
         >
           {provider}
         </Typography>
@@ -114,7 +102,7 @@ const BidAskCard = (props: {
   return (
     <Card
       sx={{
-        bgcolor: "primary.light",
+        bgcolor: "primary.main",
         display: "flex",
         justifyContent: "space-around",
         height: "6rem",
