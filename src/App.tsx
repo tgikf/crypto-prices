@@ -41,7 +41,7 @@ const App = () => {
       return;
     }
     instrumentWorkers[symbol].postMessage({
-      operation: WorkerMessageOperations.TERMINATE_WORKER,
+      operation: WorkerMessageOperations.TERMINATE_CHILDREN,
     });
     instrumentWorkers[symbol] = undefined;
     setInstruments({ ...instruments(), [symbol]: undefined });
@@ -69,9 +69,12 @@ const App = () => {
           console.debug("received bestprice update", workerMessage.data);
           setInstruments({ ...instruments(), [symbol]: workerMessage.data });
           break;
+        case WorkerMessageOperations.TERMINATE_SELF:
+          worker.terminate();
+          break;
         default:
           console.error(
-            `Received invalid operation ${workerMessage.operation}`,
+            `App: Received invalid operation ${workerMessage.operation}`,
             workerMessage
           );
           break;

@@ -72,9 +72,11 @@ Promise.all([
     }, 100);
 
     onmessage = (e: MessageEvent) => {
-      if (e.data.operation === WorkerMessageOperations.TERMINATE_WORKER) {
+      if (e.data.operation === WorkerMessageOperations.TERMINATE_CHILDREN) {
         Object.values(socketWorkers).forEach((worker) => worker.terminate());
-        this.close();
+        postMessage({
+          operation: WorkerMessageOperations.TERMINATE_SELF,
+        });
       } else {
         Object.entries(socketWorkers).forEach(([key, worker]) =>
           worker.postMessage({ ...e.data, handler: key })
