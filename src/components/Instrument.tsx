@@ -24,7 +24,7 @@ const Instrument = (props: {
   return (
     <Card sx={{ bgcolor: "background.light", width: 345, maxHeight: 500 }}>
       <CardHeader
-        avatar={<Avatar sx={{ bgcolor: "secondary.main" }}>SP</Avatar>}
+        avatar={<Avatar sx={{ bgcolor: "text.secondary" }}>SP</Avatar>}
         action={
           <IconButton aria-label="settings">
             <MoreVertIcon />

@@ -31,14 +31,14 @@ Promise.all([
 
       // Bid is better if larger
       if (!instrumentData.bid || bid > instrumentData.bid) {
-        instrumentData.bid = Number(bid).toFixed(5);
+        instrumentData.bid = Number(bid).toFixed(6);
         instrumentData.bidProvider = provider;
         eventRelevant = true;
       }
 
       // Ask is better if smaller
       if (!instrumentData.ask || ask < instrumentData.ask) {
-        instrumentData.ask = Number(ask).toFixed(5);
+        instrumentData.ask = Number(ask).toFixed(6);
         instrumentData.askProvider = provider;
         eventRelevant = true;
       }
