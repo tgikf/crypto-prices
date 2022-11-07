@@ -131,6 +131,7 @@ const App = () => {
             gap: "1rem",
           }}
         >
+          {/*
           <Instrument
             symbol={"ETHABC"}
             price={{
@@ -150,7 +151,7 @@ const App = () => {
               askProvider: "Citi",
               providers: [],
             }}
-          />
+          /> */}
           {Object.entries(instruments()).map(([key, value]) =>
             value ? <Instrument symbol={key} price={value} /> : <></>
           )}
