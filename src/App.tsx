@@ -21,17 +21,6 @@ const darkTheme = createTheme({
   },
 });
 
-const socketWorker = new SharedWorker(
-  new URL("./socketWorker.ts", import.meta.url)
-);
-console.debug("mysharedworker", socketWorker);
-//@ts-ignore
-socketWorker.port.onmessage = (e: any) =>
-  console.log("no clue where i am at", e);
-
-socketWorker.port.start();
-socketWorker.port.postMessage("hey you got this?");
-
 const instrumentWorkers: Worker[] = [];
 
 const App = () => {
@@ -64,16 +53,33 @@ const App = () => {
       instrumentWorkers[symbol].terminate();
     }
 
+    const socketWorker = new SharedWorker(
+      new URL("./socketWorker.ts", import.meta.url),
+      { type: "classic" }
+    );
+    socketWorker.port.onmessage = (ev: any) => console.debug("myonmessage", ev);
+
+    socketWorker.port.start();
     const worker = new Worker(
       new URL("./instrumentWorker.ts", import.meta.url)
     );
 
+    console.debug("the port is", socketWorker.port);
     worker.postMessage(
       {
         operation: WorkerMessageOperations.SOCKET_WORKER_PORT,
         socketWorkerPort: socketWorker.port,
       },
       [socketWorker.port]
+    );
+
+    setTimeout(
+      () =>
+        worker.postMessage({
+          operation: WorkerMessageOperations.SUBSCRIBE_FEED,
+          symbol,
+        }),
+      200
     );
 
     worker.onmessage = (e) => {
