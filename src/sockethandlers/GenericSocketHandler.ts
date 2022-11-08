@@ -3,7 +3,7 @@ import ProviderPrice from "./ProviderPrice";
 
 abstract class GenericSocketHandler {
   protected socket: WebSocket;
-  protected readonly provider: string;
+  public readonly provider: string;
   protected subscribedSymbols: string[];
   protected bestPrice: ProviderPrice;
   private lastPrice: ProviderPrice;

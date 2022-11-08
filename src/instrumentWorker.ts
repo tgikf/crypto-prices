@@ -1,4 +1,5 @@
 import type ProviderPrice from "./sockethandlers/ProviderPrice";
+import type SocketHandlers from "./sockethandlers/SocketHandlers";
 
 //@ts-ignore
 import("./global").then(({ LOG_LEVEL_DEBUG }) => {
@@ -13,7 +14,6 @@ Promise.all([
   import("./sockethandlers/CoinbaseSocketHandler"),
   import("./sockethandlers/CoinFlexSocketHandler"),
   import("./sockethandlers/BitmexSocketHandler"),
-  import("./sockethandlers/SocketHandlers"),
 ]).then(
   ([
     { default: WorkerMessageOperations },
@@ -84,17 +84,19 @@ Promise.all([
       BitmexSocketHandler,
     ].map((Handler) => new Handler(processSocketEvent));
 
-    //TODO: decouple dependencies
-    Promise.all(handlers.map((h) => h.waitForReadyState()))
-      .then(() =>
-        postMessage({ operation: WorkerMessageOperations.SOCKET_READY })
-      )
-      .catch((e) => console.error(`Not all sockets opened successfully: ${e}`));
+    handlers.forEach(async (Handler) => {
+      await Handler.waitForReadyState();
+      postMessage({
+        operation: WorkerMessageOperations.SOCKET_READY,
+        handler: Handler.provider,
+      });
+    });
 
     onmessage = (e: MessageEvent) => {
-      const { operation, symbol } = e.data as unknown as {
+      const { operation, symbol, handler } = e.data as unknown as {
         operation: number;
         symbol?: string;
+        handler?: SocketHandlers;
       };
       switch (operation) {
         case WorkerMessageOperations.TERMINATE_CHILDREN:
@@ -102,7 +104,7 @@ Promise.all([
           self.close();
           break;
         case WorkerMessageOperations.SUBSCRIBE_FEED:
-          handlers.forEach((handler) => handler.subscribe(symbol));
+          handlers.filter((h) => h.provider === handler)[0].subscribe(symbol);
           break;
         case WorkerMessageOperations.UNSUBSCRIBE_FEED:
           handlers.forEach((handler) => handler.unsubscribe(symbol));

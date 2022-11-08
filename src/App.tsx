@@ -54,7 +54,6 @@ const App = () => {
 
     const worker = new Worker(
       new URL("./instrumentWorker.ts", import.meta.url)
-      /* { mode: "classic" } */
     );
 
     worker.onmessage = (e) => {
@@ -63,6 +62,7 @@ const App = () => {
         case WorkerMessageOperations.SOCKET_READY:
           worker.postMessage({
             operation: WorkerMessageOperations.SUBSCRIBE_FEED,
+            handler: workerMessage.handler,
             symbol,
           });
           break;
