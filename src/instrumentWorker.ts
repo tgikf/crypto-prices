@@ -8,20 +8,8 @@ import("./global").then(({ LOG_LEVEL_DEBUG }) => {
   }
 });
 
-Promise.all([
-  import("./WorkerMessageOperations"),
-  import("./sockethandlers/BinanceSocketHandler"),
-  import("./sockethandlers/CoinbaseSocketHandler"),
-  import("./sockethandlers/CoinFlexSocketHandler"),
-  import("./sockethandlers/BitmexSocketHandler"),
-]).then(
-  ([
-    { default: WorkerMessageOperations },
-    { default: BinanceSocketHandler },
-    { default: CoinbaseSocketHandler },
-    { default: CoinFlexSocketHandler },
-    { default: BitmexSocketHandler },
-  ]) => {
+Promise.all([import("./WorkerMessageOperations")]).then(
+  ([{ default: WorkerMessageOperations }]) => {
     const instrumentData: {
       bid?: string;
       bidProvider?: string;
@@ -77,50 +65,28 @@ Promise.all([
       return eventRelevant;
     };
 
-    const processSocketEvent = (e: ProviderPrice): void => {
-      if (instrumentDataChanged(e)) {
-        postMessage({
-          operation: WorkerMessageOperations.PRICE_UPDATE,
-          data: instrumentData,
-        });
-      }
-    };
-
-    const handlers = [
-      BinanceSocketHandler,
-      CoinbaseSocketHandler,
-      CoinFlexSocketHandler,
-      BitmexSocketHandler,
-    ].map((Handler) => new Handler(processSocketEvent));
-
-    handlers.forEach(async (Handler) => {
-      await Handler.waitForReadyState();
-      postMessage({
-        operation: WorkerMessageOperations.SOCKET_READY,
-        handler: Handler.provider,
-      });
-    });
+    let socketsPort;
 
     onmessage = (e: MessageEvent) => {
-      const { operation, symbol, handler } = e.data as unknown as {
-        operation: number;
-        symbol?: string;
-        handler?: SocketHandlers;
-      };
+      const { operation, symbol, handler, socketWorkerPort } =
+        e.data as unknown as {
+          operation: number;
+          symbol?: string;
+          handler?: SocketHandlers;
+          socketWorkerPort?: any;
+        };
       switch (operation) {
-        case WorkerMessageOperations.TERMINATE_CHILDREN:
-          handlers.forEach((handler) => handler.close());
-          self.close();
-          break;
+        case WorkerMessageOperations.SOCKET_WORKER_PORT:
+          socketsPort: socketWorkerPort;
         case WorkerMessageOperations.SUBSCRIBE_FEED:
-          handlers.filter((h) => h.provider === handler)[0].subscribe(symbol);
+          socketsPort.postMessage({ operation, symbol });
           break;
         case WorkerMessageOperations.UNSUBSCRIBE_FEED:
-          handlers.forEach((handler) => handler.unsubscribe(symbol));
+          socketsPort.postMessage({ operation, symbol });
           break;
         default:
           console.error(
-            `socketWorker: Received invalid operation ${operation}`
+            `instrumentWorker: Received invalid operation ${operation}`
           );
       }
     };

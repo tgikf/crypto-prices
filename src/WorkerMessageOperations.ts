@@ -5,6 +5,7 @@ enum WorkerMessageOperations {
   SUBSCRIBE_FEED,
   UNSUBSCRIBE_FEED,
   PRICE_UPDATE,
+  SOCKET_WORKER_PORT,
 }
 
 export default WorkerMessageOperations;

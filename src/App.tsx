@@ -21,6 +21,17 @@ const darkTheme = createTheme({
   },
 });
 
+const socketWorker = new SharedWorker(
+  new URL("./socketWorker.ts", import.meta.url)
+);
+console.debug("mysharedworker", socketWorker);
+//@ts-ignore
+socketWorker.port.onmessage = (e: any) =>
+  console.log("no clue where i am at", e);
+
+socketWorker.port.start();
+socketWorker.port.postMessage("hey you got this?");
+
 const instrumentWorkers: Worker[] = [];
 
 const App = () => {
@@ -41,7 +52,8 @@ const App = () => {
       return;
     }
     instrumentWorkers[symbol].postMessage({
-      operation: WorkerMessageOperations.TERMINATE_CHILDREN,
+      operation: WorkerMessageOperations.UNSUBSCRIBE_FEED,
+      symbol,
     });
     instrumentWorkers[symbol] = undefined;
     setInstruments({ ...instruments(), [symbol]: undefined });
@@ -54,6 +66,14 @@ const App = () => {
 
     const worker = new Worker(
       new URL("./instrumentWorker.ts", import.meta.url)
+    );
+
+    worker.postMessage(
+      {
+        operation: WorkerMessageOperations.SOCKET_WORKER_PORT,
+        socketWorkerPort: socketWorker.port,
+      },
+      [socketWorker.port]
     );
 
     worker.onmessage = (e) => {
