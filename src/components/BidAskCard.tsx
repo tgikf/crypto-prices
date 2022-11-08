@@ -52,7 +52,7 @@ const BidAskCard = (props: {
         userSelect: "none",
         color: "background.default",
         "&:hover": {
-          color: type === "bid" ? "#42a5f5 !important" : "#ab47bc !important",
+          color: type === "bid" ? "#2576e8 !important" : "#ab47bc !important",
           backgroundColor: "text.primary",
         },
       }}

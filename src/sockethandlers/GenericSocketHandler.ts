@@ -1,18 +1,42 @@
+import { SOCKET_THROTTLING_MS } from "../global";
 import ProviderPrice from "./ProviderPrice";
 
 abstract class GenericSocketHandler {
   protected socket: WebSocket;
   protected readonly provider: string;
   protected subscribedSymbols: string[];
+  protected bestPrice: ProviderPrice;
+  private lastPrice: ProviderPrice;
+
   abstract subscribe(symbol: string): void;
   abstract unsubscribe(symbol: string): void;
   abstract isRelevant(message: any): boolean;
   abstract isUpdateDue(unformatted: any): boolean;
-  abstract getFormattedPriceUpdate(unformatted: any): ProviderPrice;
+  abstract updateBestPrice(unformatted: any): void;
+
+  constructor(protected updateParent: (message: ProviderPrice) => void) {
+    const start = Date.now();
+
+    /* Socket level throttling: update the parent only if the price has changed and at interval
+       To prevent very active sockets from DoS-ing the instrument worker
+    */
+    setInterval(() => {
+      if (this.bestPrice?.symbol && this.bestPrice !== this.lastPrice) {
+        this.lastPrice = this.bestPrice;
+        updateParent(this.bestPrice);
+      }
+    }, SOCKET_THROTTLING_MS);
+  }
 
   sleep = (ms: number) => {
     return new Promise((resolve) => setTimeout(resolve, ms));
   };
+
+  close(): void {
+    this.socket.close();
+  }
+
+  publish(): void {}
 
   async waitForReadyState(): Promise<void> {
     let timeToConnect = 0;
