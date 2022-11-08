@@ -67,7 +67,6 @@ const App = () => {
           });
           break;
         case WorkerMessageOperations.PRICE_UPDATE:
-          console.debug("received bestprice update", workerMessage.data);
           setInstruments({ ...instruments(), [symbol]: workerMessage.data });
           break;
         case WorkerMessageOperations.TERMINATE_SELF:

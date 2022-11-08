@@ -33,20 +33,35 @@ Promise.all([
     const instrumentDataChanged = (priceData: any): boolean => {
       const { symbol, provider, ask, bid } = priceData;
       let eventRelevant = false;
-
       if (!symbol || !provider || !ask || !bid) {
         return false;
       }
 
-      // Bid is better if larger
-      if (!instrumentData.bid || bid > instrumentData.bid) {
+      /* update bid if
+         - bid is empty
+         - new bid is better
+         - new bid is from current bid provider (i.e., their bid got worse)
+      */
+      if (
+        !instrumentData.bid ||
+        instrumentData.bidProvider === provider ||
+        bid > instrumentData.bid
+      ) {
         instrumentData.bid = Number(bid).toFixed(6);
         instrumentData.bidProvider = provider;
         eventRelevant = true;
       }
 
-      // Ask is better if smaller
-      if (!instrumentData.ask || ask < instrumentData.ask) {
+      /* update bid if
+         - bid is empty
+         - new bid is better
+         - new bid is from current bid provider (i.e., their bid got worse)
+      */
+      if (
+        !instrumentData.ask ||
+        instrumentData.askProvider === provider ||
+        ask < instrumentData.ask
+      ) {
         instrumentData.ask = Number(ask).toFixed(6);
         instrumentData.askProvider = provider;
         eventRelevant = true;
@@ -59,12 +74,6 @@ Promise.all([
         instrumentData.providers.push(provider);
         eventRelevant = true;
       }
-      console.debug(
-        `From ${priceData.provider}: Received ${
-          eventRelevant ? "relevant##" : "irrelevant"
-        } event for ${priceData.symbol} at ${Date.now()}`,
-        priceData
-      );
       return eventRelevant;
     };
 
