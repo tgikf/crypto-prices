@@ -14,6 +14,10 @@ abstract class GenericSocketHandler {
     return new Promise((resolve) => setTimeout(resolve, ms));
   };
 
+  close(): void {
+    this.socket.close();
+  }
+
   async waitForReadyState(): Promise<void> {
     let timeToConnect = 0;
     const TIME_LIMIT = 5000;

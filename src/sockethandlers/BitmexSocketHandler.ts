@@ -4,7 +4,7 @@ import SocketHandlers from "./SocketHandlers";
 
 class BitmexSocketHandler extends GenericSocketHandler {
   provider = SocketHandlers.BITMEX;
-  constructor() {
+  constructor(protected updateParent: (message: ProviderPrice) => void) {
     super();
     this.socket = new WebSocket(`wss://ws.bitmex.com/realtime`);
     this.socket.onopen = (e) => {
@@ -15,7 +15,7 @@ class BitmexSocketHandler extends GenericSocketHandler {
       console.debug(`message from ${this.provider}`, message);
       const socketMessage = JSON.parse(message.data);
       if (this.isRelevant(socketMessage)) {
-        postMessage(this.getFormattedPriceUpdate(socketMessage));
+        updateParent(this.getFormattedPriceUpdate(socketMessage));
       }
     };
   }

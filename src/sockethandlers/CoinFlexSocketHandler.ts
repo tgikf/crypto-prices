@@ -5,7 +5,7 @@ import SocketHandlers from "./SocketHandlers";
 class CoinFlexSocketHandler extends GenericSocketHandler {
   provider = SocketHandlers.COINFLEX;
 
-  constructor() {
+  constructor(protected updateParent: (message: ProviderPrice) => void) {
     super();
     this.socket = new WebSocket(`wss://v2api.coinflex.com/v2/websocket`);
     this.socket.onopen = (e) => {
@@ -16,7 +16,7 @@ class CoinFlexSocketHandler extends GenericSocketHandler {
       console.debug(`message from ${this.provider}`, message);
       const socketMessage = JSON.parse(message.data);
       if (this.isRelevant(socketMessage)) {
-        postMessage(this.getFormattedPriceUpdate(socketMessage));
+        updateParent(this.getFormattedPriceUpdate(socketMessage));
       }
     };
   }

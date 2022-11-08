@@ -4,7 +4,8 @@ import SocketHandlers from "./SocketHandlers";
 
 class BinanceSocketHandler extends GenericSocketHandler {
   provider = SocketHandlers.BINANCE;
-  constructor() {
+
+  constructor(protected updateParent: (message: ProviderPrice) => void) {
     super();
     this.socket = new WebSocket(`wss://stream.binance.com:443/ws`);
     this.socket.onopen = (e) => {
@@ -15,7 +16,7 @@ class BinanceSocketHandler extends GenericSocketHandler {
       console.debug(`message from ${this.provider}`, message);
       const socketMessage = JSON.parse(message.data);
       if (this.isRelevant(socketMessage)) {
-        postMessage(this.getFormattedPriceUpdate(socketMessage));
+        updateParent(this.getFormattedPriceUpdate(socketMessage));
       }
     };
   }

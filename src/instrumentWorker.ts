@@ -1,3 +1,5 @@
+import ProviderPrice from "./sockethandlers/ProviderPrice";
+
 //@ts-ignore
 import("./global").then(({ default: LOG_LEVEL_DEBUG }) => {
   if (!LOG_LEVEL_DEBUG) {
@@ -6,12 +8,19 @@ import("./global").then(({ default: LOG_LEVEL_DEBUG }) => {
 });
 
 Promise.all([
-  import("./initializeSocketWorkers"),
   import("./WorkerMessageOperations"),
+  import("./sockethandlers/BinanceSocketHandler"),
+  import("./sockethandlers/CoinbaseSocketHandler"),
+  import("./sockethandlers/CoinFlexSocketHandler"),
+  import("./sockethandlers/BitmexSocketHandler"),
+  import("./sockethandlers/SocketHandlers"),
 ]).then(
   ([
-    { default: initializeSocketWorkers },
     { default: WorkerMessageOperations },
+    { default: BinanceSocketHandler },
+    { default: CoinbaseSocketHandler },
+    { default: CoinFlexSocketHandler },
+    { default: BitmexSocketHandler },
   ]) => {
     const instrumentData: {
       bid?: string;
@@ -54,8 +63,8 @@ Promise.all([
       return eventRelevant;
     };
 
-    const processSocketEvent = (e: MessageEvent): void => {
-      if (instrumentDataChanged(e.data)) {
+    const processSocketEvent = (e: ProviderPrice): void => {
+      if (instrumentDataChanged(e)) {
         postMessage({
           operation: WorkerMessageOperations.PRICE_UPDATE,
           data: instrumentData,
@@ -63,24 +72,40 @@ Promise.all([
       }
     };
 
-    const socketWorkers = initializeSocketWorkers(processSocketEvent);
-    /*TODO: fix delay in worker spawning and remove settimeout
-    appears to be connected to the imports inside the worker 
-    (can it be resolved by separate imports inside async function?)*/
-    setTimeout(() => {
-      postMessage({ operation: WorkerMessageOperations.SOCKET_READY });
-    }, 100);
+    const handlers = [
+      BinanceSocketHandler,
+      CoinbaseSocketHandler,
+      CoinFlexSocketHandler,
+      BitmexSocketHandler,
+    ].map((Handler) => new Handler(processSocketEvent));
+
+    handlers.forEach(async (Handler) => await Handler.waitForReadyState());
+    Promise.all(handlers.map((h) => h.waitForReadyState()))
+      .then(() =>
+        postMessage({ operation: WorkerMessageOperations.SOCKET_READY })
+      )
+      .catch((e) => console.error(`Not all sockets opened successfully: ${e}`));
 
     onmessage = (e: MessageEvent) => {
-      if (e.data.operation === WorkerMessageOperations.TERMINATE_CHILDREN) {
-        Object.values(socketWorkers).forEach((worker) => worker.terminate());
-        postMessage({
-          operation: WorkerMessageOperations.TERMINATE_SELF,
-        });
-      } else {
-        Object.entries(socketWorkers).forEach(([key, worker]) =>
-          worker.postMessage({ ...e.data, handler: key })
-        );
+      const { operation, symbol } = e.data as unknown as {
+        operation: number;
+        symbol?: string;
+      };
+      switch (operation) {
+        case WorkerMessageOperations.TERMINATE_CHILDREN:
+          handlers.forEach((handler) => handler.close());
+          postMessage({ operation: WorkerMessageOperations.TERMINATE_SELF });
+          break;
+        case WorkerMessageOperations.SUBSCRIBE_FEED:
+          handlers.forEach((handler) => handler.subscribe(symbol));
+          break;
+        case WorkerMessageOperations.UNSUBSCRIBE_FEED:
+          handlers.forEach((handler) => handler.unsubscribe(symbol));
+          break;
+        default:
+          console.error(
+            `socketWorker: Received invalid operation ${operation}`
+          );
       }
     };
   }

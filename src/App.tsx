@@ -57,7 +57,7 @@ const App = () => {
     );
 
     worker.onmessage = (e) => {
-      const workerMessage = e.data; //JSON.parse(e.data);
+      const workerMessage = e.data;
       switch (workerMessage.operation) {
         case WorkerMessageOperations.SOCKET_READY:
           worker.postMessage({
@@ -71,6 +71,7 @@ const App = () => {
           break;
         case WorkerMessageOperations.TERMINATE_SELF:
           worker.terminate();
+          instrumentWorkers[symbol] = undefined;
           break;
         default:
           console.error(
