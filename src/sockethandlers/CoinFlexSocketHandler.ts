@@ -6,7 +6,7 @@ class CoinFlexSocketHandler extends GenericSocketHandler {
   provider = SocketHandlers.COINFLEX;
 
   constructor(protected updateParent: (message: ProviderPrice) => void) {
-    super();
+    super(updateParent);
     this.socket = new WebSocket(`wss://v2api.coinflex.com/v2/websocket`);
     this.socket.onopen = (e) => {
       console.debug(`Socket with ${this.provider} opened`, e);
@@ -16,7 +16,7 @@ class CoinFlexSocketHandler extends GenericSocketHandler {
       console.debug(`message from ${this.provider}`, message);
       const socketMessage = JSON.parse(message.data);
       if (this.isRelevant(socketMessage)) {
-        updateParent(this.getFormattedPriceUpdate(socketMessage));
+        this.updateBestPrice(socketMessage);
       }
     };
   }
@@ -55,8 +55,8 @@ class CoinFlexSocketHandler extends GenericSocketHandler {
     return true;
   }
 
-  getFormattedPriceUpdate(data: any): ProviderPrice {
-    return {
+  updateBestPrice(data: any): void {
+    this.bestPrice = {
       symbol: data.data.marketCode.substring(0, 7).replaceAll("-", ""),
       provider: this.provider,
       bid: data.data.bids[0][0],

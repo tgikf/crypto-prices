@@ -54,6 +54,7 @@ const App = () => {
 
     const worker = new Worker(
       new URL("./instrumentWorker.ts", import.meta.url)
+      /* { mode: "classic" } */
     );
 
     worker.onmessage = (e) => {

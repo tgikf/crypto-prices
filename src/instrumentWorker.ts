@@ -1,7 +1,7 @@
-import ProviderPrice from "./sockethandlers/ProviderPrice";
+import type ProviderPrice from "./sockethandlers/ProviderPrice";
 
 //@ts-ignore
-import("./global").then(({ default: LOG_LEVEL_DEBUG }) => {
+import("./global").then(({ LOG_LEVEL_DEBUG }) => {
   if (!LOG_LEVEL_DEBUG) {
     self.console.debug = () => {};
   }
@@ -59,7 +59,12 @@ Promise.all([
         instrumentData.providers.push(provider);
         eventRelevant = true;
       }
-
+      console.debug(
+        `From ${priceData.provider}: Received ${
+          eventRelevant ? "relevant##" : "irrelevant"
+        } event for ${priceData.symbol} at ${Date.now()}`,
+        priceData
+      );
       return eventRelevant;
     };
 
@@ -79,7 +84,7 @@ Promise.all([
       BitmexSocketHandler,
     ].map((Handler) => new Handler(processSocketEvent));
 
-    handlers.forEach(async (Handler) => await Handler.waitForReadyState());
+    //TODO: decouple dependencies
     Promise.all(handlers.map((h) => h.waitForReadyState()))
       .then(() =>
         postMessage({ operation: WorkerMessageOperations.SOCKET_READY })
@@ -94,7 +99,7 @@ Promise.all([
       switch (operation) {
         case WorkerMessageOperations.TERMINATE_CHILDREN:
           handlers.forEach((handler) => handler.close());
-          postMessage({ operation: WorkerMessageOperations.TERMINATE_SELF });
+          self.close();
           break;
         case WorkerMessageOperations.SUBSCRIBE_FEED:
           handlers.forEach((handler) => handler.subscribe(symbol));

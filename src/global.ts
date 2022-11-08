@@ -1,2 +1,2 @@
-const LOG_LEVEL_DEBUG = false;
-export default LOG_LEVEL_DEBUG;
+export const LOG_LEVEL_DEBUG = false;
+export const SOCKET_THROTTLING_MS = 150;
