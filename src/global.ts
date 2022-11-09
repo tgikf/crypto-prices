@@ -1,1 +1,1 @@
-export const LOG_LEVEL_DEBUG = false;
+export const LOG_LEVEL_DEBUG = true;

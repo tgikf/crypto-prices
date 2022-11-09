@@ -48,8 +48,9 @@ class CoinbaseSocketHandler extends GenericSocketHandler {
   }
 
   updateBestPrice(data: any): void {
-    this.bestPrice = {
-      symbol: data.product_id.replaceAll("-", ""),
+    const symbol = data.product_id.replaceAll("-", "");
+    this.bestPrices[symbol] = {
+      symbol,
       provider: this.provider,
       bid: data.best_bid,
       ask: data.best_ask,

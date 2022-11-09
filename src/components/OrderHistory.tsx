@@ -55,7 +55,9 @@ const OrderHistory = (props: {
                     sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
                   >
                     <TableCell scope="row">
-                      {new Date(order.date).toLocaleTimeString()}
+                      {`${new Date(order.date).toLocaleDateString()} ${new Date(
+                        order.date
+                      ).toLocaleTimeString()}`}
                     </TableCell>
                     <TableCell>{order.pair}</TableCell>
                     <TableCell>{order.buySell}</TableCell>

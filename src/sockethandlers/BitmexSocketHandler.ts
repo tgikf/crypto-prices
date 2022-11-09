@@ -47,8 +47,9 @@ class BitmexSocketHandler extends GenericSocketHandler {
   }
 
   updateBestPrice(data: any): void {
-    this.bestPrice = {
-      symbol: data.data[0].symbol.replaceAll("XBT", "BTC"),
+    const symbol = data.data[0].symbol.replaceAll("XBT", "BTC");
+    this.bestPrices[symbol] = {
+      symbol,
       provider: this.provider,
       bid: data.data[0].bids[0][0],
       ask: data.data[0].asks[0][0],

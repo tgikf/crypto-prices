@@ -4,8 +4,8 @@ abstract class GenericSocketHandler {
   protected socket: WebSocket;
   public readonly provider: string;
   protected subscribedSymbols: string[];
-  protected bestPrice: ProviderPrice;
-  private lastPrice: ProviderPrice;
+  protected bestPrices: { [key: string]: ProviderPrice } = {};
+  private lastPrice: { [key: string]: ProviderPrice } = {};
 
   abstract subscribe(symbol: string): void;
   abstract unsubscribe(symbol: string): void;
@@ -13,17 +13,20 @@ abstract class GenericSocketHandler {
   abstract updateBestPrice(unformatted: any): void;
 
   constructor(protected publishUpdate: (message: ProviderPrice) => void) {
-    const start = Date.now();
-
     /* Socket level throttling: update the parent only if the price has changed and at interval
        To prevent very active sockets from DoS-ing the instrument worker
     */
     setInterval(() => {
-      if (this.bestPrice?.symbol && this.bestPrice !== this.lastPrice) {
-        this.lastPrice = this.bestPrice;
-        publishUpdate(this.bestPrice);
-      }
-    }, 150);
+      Object.entries(this.bestPrices).forEach(([key, bestPrice]) => {
+        if (
+          bestPrice?.symbol &&
+          bestPrice !== this.lastPrice[bestPrice.symbol]
+        ) {
+          this.lastPrice[bestPrice.symbol] = bestPrice;
+          publishUpdate(bestPrice);
+        }
+      });
+    }, 250);
   }
 
   sleep = (ms: number) => {

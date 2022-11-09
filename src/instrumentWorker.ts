@@ -72,7 +72,7 @@ setInterval(() => {
       data: priceData,
     });
   priceDataLastUpdate = priceDataCurrentUpdate;
-}, 120);
+}, 200);
 
 onmessage = (e: MessageEvent) => {
   const { operation, symbol, sharedWorkerPort } = e.data as unknown as {

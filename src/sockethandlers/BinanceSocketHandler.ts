@@ -46,7 +46,7 @@ class BinanceSocketHandler extends GenericSocketHandler {
   }
 
   updateBestPrice(data: any): void {
-    this.bestPrice = {
+    this.bestPrices[data.s] = {
       symbol: data.s,
       provider: this.provider,
       bid: data.b,

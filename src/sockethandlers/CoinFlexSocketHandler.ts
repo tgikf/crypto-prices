@@ -52,8 +52,9 @@ class CoinFlexSocketHandler extends GenericSocketHandler {
   }
 
   updateBestPrice(data: any): void {
-    this.bestPrice = {
-      symbol: data.data.marketCode.substring(0, 7).replaceAll("-", ""),
+    const symbol = data.data.marketCode.substring(0, 7).replaceAll("-", "");
+    this.bestPrices[symbol] = {
+      symbol,
       provider: this.provider,
       bid: data.data.bids[0][0],
       ask: data.data.asks[0][0],

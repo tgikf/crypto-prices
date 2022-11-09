@@ -2,6 +2,8 @@
 
 This repository hosts a small client-side web app, that serves as a prototype for a real-time Cryptocurrency price/order data aggregation app.
 
+**Live version: [https://tgikf.github.io/crypto-prices/](https://tgikf.github.io/crypto-prices/)**
+
 ## Tech Stack and Tools
 
 The prototype is based on [Solid.js](https://www.solidjs.com/) written in TypeScript. While it's new to me and less adopted than for instance React, I chose it because of its [`solid` performance in benchmarks with other libraries and frameworks](https://krausest.github.io/js-framework-benchmark/2022/table_chrome_107.0.5304.62.html). In addition to that, [Vite](https://vitejs.dev/) is used as dev server and build tool.
@@ -43,9 +45,9 @@ After some experimentation, I eventually implemented the model illustrated below
 
 With connectivity to large exchanges such as Binance, subscribing to a popular trading pair will lead to the app receiving messages every few milliseconds even when just subscribing to a single stream of a single exchange. Rendering all updates, as relevant as they may be, in real time will not only be of no use to the user but likely also have a negative impact on performance.
 
-To address this problem, the `SocketHandler` instances throttle the incoming data streams and currently only publish an update to the shared worker every `150` milliseconds. This throttling is implemented in[`GenericSocketHandler.ts`](./src/sockethandlers/GenericSocketHandler.ts) and equally applied to all sockets, regardless of the actual incoming message volume. Naturally, if there was no price update within 150 milliseconds, no `publish` event will be triggered.
+To address this problem, the `SocketHandler` instances throttle the incoming data streams and currently only publish an update to the shared worker every `250` milliseconds. This throttling is implemented in[`GenericSocketHandler.ts`](./src/sockethandlers/GenericSocketHandler.ts) and equally applied to all sockets, regardless of the actual incoming message volume. Naturally, if there was no price update within 150 milliseconds, no `publish` event will be triggered.
 
-With each socket publish event being moved to though JS event loop before it's being executed, however, there's a slight risk of synchronization issues (e.g., comparing price 2 from `exchange A` with price 1 from `exchange B` while price 2 from `exchange B` has arrived at the socket but not been updated). To address that, the Dedicated Worker of each trading pair, which publishes meaningful price updates to the Main Thread, runs every `120ms`.
+With each socket publish event being moved to though JS event loop before it's being executed, however, there's a slight risk of synchronization issues (e.g., comparing price 2 from `exchange A` with price 1 from `exchange B` while price 2 from `exchange B` has arrived at the socket but not been updated). To address that, the Dedicated Worker of each trading pair, which publishes meaningful price updates to the Main Thread, runs every `200` milliseconds.
 
 ## Challenges and Shortcomings
 
@@ -61,8 +63,8 @@ During the brief implementation phase of this prototype I faced various problems
 
   Even with the threading model outlined above, the app still has performance issues:
 
-  - When 5+ instruments are subscribed to, it visibly impacts the browser responsiveness (e.g., when resizing the browser window)
-  - The order placement functionality (i.e., click on price button) is largely unavailable, either because the price clicked has already been changed or because the browser is overwhelmed and the click is stuck somewhere in the event queue
+  - When 5+ instrument are subscribed to, it visibly impacts the browser responsiveness (e.g., when resizing the browser window)
+  - The availability of the order placement functionality (i.e., click on price button) gets worse with every instrument that's added to the screen
 
   Although I didn't find time to verify, I believe that spawning one Dedicated Worker thread per trading pair is probably excessive and does more harm than good. In a future solution I would look to find a way to group multiple instruments in a single Dedicated Worker.
 
