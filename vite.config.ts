@@ -8,5 +8,6 @@ export default defineConfig({
   build: {
     target: "esnext",
   },
+  logLevel: "error",
   base: "/crypto-prices/",
 });

@@ -55,7 +55,6 @@ const App = () => {
     const sharedSocketWorker = new SharedWorker(
       new URL("./socketWorker.ts", import.meta.url)
     );
-    console.debug("!!creating instrument worker for", symbol);
 
     const instrumentWorker = new Worker(
       new URL("./instrumentWorker.ts", import.meta.url),
@@ -74,29 +73,17 @@ const App = () => {
       },
       [sharedSocketWorker.port]
     );
-    /*
-    //TODO can this be replaced with the socket_ready message?
-    setTimeout(
-      () =>
-        instrumentWorker.postMessage({
-          operation: WorkerMessageOperations.SUBSCRIBE_FEED,
-          symbol,
-        }),
-      1000
-    );*/
 
     instrumentWorker.onmessage = (e) => {
       const { operation, data } = e.data;
       switch (operation) {
         case WorkerMessageOperations.SOCKET_READY:
-          console.debug("socket ready to subscribe?");
           instrumentWorker.postMessage({
             operation: WorkerMessageOperations.SUBSCRIBE_FEED,
             symbol,
           });
           break;
         case WorkerMessageOperations.PRICE_UPDATE:
-          console.debug("this symbol is wrong", symbol, "but self is", self);
           setInstruments({
             ...instruments(),
             [symbol]: data,
