@@ -10,10 +10,9 @@ abstract class GenericSocketHandler {
   abstract subscribe(symbol: string): void;
   abstract unsubscribe(symbol: string): void;
   abstract isRelevant(message: any): boolean;
-  abstract isUpdateDue(unformatted: any): boolean;
   abstract updateBestPrice(unformatted: any): void;
 
-  constructor(protected updateParent: (message: ProviderPrice) => void) {
+  constructor(protected publishUpdate: (message: ProviderPrice) => void) {
     const start = Date.now();
 
     /* Socket level throttling: update the parent only if the price has changed and at interval
@@ -22,7 +21,7 @@ abstract class GenericSocketHandler {
     setInterval(() => {
       if (this.bestPrice?.symbol && this.bestPrice !== this.lastPrice) {
         this.lastPrice = this.bestPrice;
-        updateParent(this.bestPrice);
+        publishUpdate(this.bestPrice);
       }
     }, 150);
   }
@@ -34,8 +33,6 @@ abstract class GenericSocketHandler {
   close(): void {
     this.socket.close();
   }
-
-  publish(): void {}
 
   async waitForReadyState(): Promise<void> {
     let timeToConnect = 0;

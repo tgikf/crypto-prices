@@ -118,7 +118,12 @@ const App = () => {
   return (
     <ThemeProvider theme={darkTheme}>
       <Box
-        sx={{ flexGrow: 1, bgcolor: "background.default", minHeight: "100vh" }}
+        sx={{
+          flexGrow: 1,
+          bgcolor: "background.default",
+          minHeight: "100vh",
+          overflowX: "hidden",
+        }}
       >
         <Grid container padding={2} spacing={2}>
           <Grid item sm={12} md={6} lg={4}>

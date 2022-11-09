@@ -4,8 +4,8 @@ import SocketHandlers from "./SocketHandlers";
 
 class BitmexSocketHandler extends GenericSocketHandler {
   provider = SocketHandlers.BITMEX;
-  constructor(protected updateParent: (message: ProviderPrice) => void) {
-    super(updateParent);
+  constructor(protected publishUpdate: (message: ProviderPrice) => void) {
+    super(publishUpdate);
     this.socket = new WebSocket(`wss://ws.bitmex.com/realtime`);
     this.socket.onopen = (e) => {
       console.debug(`Socket with ${this.provider} opened`, e);
@@ -44,10 +44,6 @@ class BitmexSocketHandler extends GenericSocketHandler {
       message.data[0]?.bids?.length > 0 &&
       message.data[0]?.asks?.length > 0
     );
-  }
-
-  isUpdateDue(unformatted: string): boolean {
-    return true;
   }
 
   updateBestPrice(data: any): void {

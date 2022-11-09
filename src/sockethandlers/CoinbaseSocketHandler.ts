@@ -5,8 +5,8 @@ import SocketHandlers from "./SocketHandlers";
 class CoinbaseSocketHandler extends GenericSocketHandler {
   provider = SocketHandlers.COINBASE;
 
-  constructor(protected updateParent: (message: ProviderPrice) => void) {
-    super(updateParent);
+  constructor(protected publishUpdate: (message: ProviderPrice) => void) {
+    super(publishUpdate);
     this.socket = new WebSocket(`wss://ws-feed.exchange.coinbase.com`);
     this.socket.onopen = (e) => {
       console.debug(`Socket with ${this.provider} opened`, e);
@@ -45,10 +45,6 @@ class CoinbaseSocketHandler extends GenericSocketHandler {
 
   isRelevant(message: any) {
     return message.type === "ticker";
-  }
-
-  isUpdateDue(unformatted: string): boolean {
-    return true;
   }
 
   updateBestPrice(data: any): void {
