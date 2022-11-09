@@ -3,6 +3,7 @@ import Typography from "@suid/material/Typography";
 import Box from "@suid/material/Box";
 import Button from "@suid/material/Button";
 import Input from "@suid/material/Input";
+import evaluatePrice from "./utils/utils";
 
 const BidAskCard = (props: {
   price: {
@@ -12,25 +13,16 @@ const BidAskCard = (props: {
     askProvider: string;
   };
 }) => {
-  const {
+  let {
     price: { bid, bidProvider, ask, askProvider },
   } = props;
 
-  const getHighlightedPricePart = (bid: string, ask: string) => {
-    let start, end;
-    [...bid].some((digit, i) => {
-      if (digit !== ask.charAt(i)) {
-        start = i;
-        end = ask.charAt(i + 1) === "." ? i + 3 : i + 2;
-        end = end > ask.length ? ask.length : end;
-        return true;
-      }
-    });
-
-    return [start, end];
-  };
-
-  const [highlightStart, highlightEnd] = getHighlightedPricePart(bid, ask);
+  const [highlightStart, highlightEnd, cutoff] = evaluatePrice(bid, ask);
+  if (cutoff) {
+    console.debug("cutting", bid, ask);
+    bid = bid.slice(0, cutoff);
+    ask = ask.slice(0, cutoff);
+  }
 
   const renderPrice = (
     price: string,
