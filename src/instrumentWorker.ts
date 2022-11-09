@@ -1,7 +1,7 @@
 //@ts-ignore
 let socketsPort = undefined;
 
-const instrumentData: {
+const priceData: {
   bid?: string;
   bidProvider?: string;
   ask?: string;
@@ -9,8 +9,10 @@ const instrumentData: {
   providers: string[];
 } = { providers: [] };
 
-const instrumentDataChanged = (priceData: any): boolean => {
-  const { symbol, provider, ask, bid } = priceData;
+let priceDataCurrentUpdate, priceDataLastUpdate;
+
+const processIncomingMessage = (message: any): boolean => {
+  const { symbol, provider, ask, bid } = message.data;
   let eventRelevant = false;
   if (!symbol || !provider || !ask || !bid) {
     return false;
@@ -22,12 +24,12 @@ const instrumentDataChanged = (priceData: any): boolean => {
    - new bid is from current bid provider (i.e., their bid got worse)
 */
   if (
-    !instrumentData.bid ||
-    instrumentData.bidProvider === provider ||
-    bid > instrumentData.bid
+    !priceData.bid ||
+    priceData.bidProvider === provider ||
+    bid > priceData.bid
   ) {
-    instrumentData.bid = Number(bid).toFixed(6);
-    instrumentData.bidProvider = provider;
+    priceData.bid = Number(bid).toFixed(6);
+    priceData.bidProvider = provider;
     eventRelevant = true;
   }
 
@@ -37,33 +39,40 @@ const instrumentDataChanged = (priceData: any): boolean => {
    - new bid is from current bid provider (i.e., their bid got worse)
 */
   if (
-    !instrumentData.ask ||
-    instrumentData.askProvider === provider ||
-    ask < instrumentData.ask
+    !priceData.ask ||
+    priceData.askProvider === provider ||
+    ask < priceData.ask
   ) {
-    instrumentData.ask = Number(ask).toFixed(6);
-    instrumentData.askProvider = provider;
+    priceData.ask = Number(ask).toFixed(6);
+    priceData.askProvider = provider;
     eventRelevant = true;
   }
 
   if (
-    instrumentData.providers.length <= 0 ||
-    !instrumentData.providers.includes(provider)
+    priceData.providers.length <= 0 ||
+    !priceData.providers.includes(provider)
   ) {
-    instrumentData.providers.push(provider);
+    priceData.providers.push(provider);
     eventRelevant = true;
+  }
+  if (eventRelevant) {
+    priceDataCurrentUpdate = Date.now();
   }
   return eventRelevant;
 };
 
-const socketMessageListener = (message) => {
-  if (instrumentDataChanged(message.data)) {
+setInterval(() => {
+  if (
+    priceData.bid &&
+    priceData.ask &&
+    (!priceDataLastUpdate || priceDataCurrentUpdate > priceDataLastUpdate)
+  )
     postMessage({
       operation: 4, //WorkerMessageOperations.PRICE_UPDATE,
-      data: instrumentData,
+      data: priceData,
     });
-  }
-};
+  priceDataLastUpdate = priceDataCurrentUpdate;
+}, 120);
 
 onmessage = (e: MessageEvent) => {
   const { operation, symbol, sharedWorkerPort } = e.data as unknown as {
@@ -72,11 +81,10 @@ onmessage = (e: MessageEvent) => {
     sharedWorkerPort?: any;
   };
 
-  console.debug(`In ${self.name} for operation ${operation} at ${Date.now()}`);
   switch (operation) {
     case 5: // WorkerMessageOperations.SOCKET_WORKER_PORT:
       socketsPort = sharedWorkerPort;
-      socketsPort.onmessage = socketMessageListener;
+      socketsPort.onmessage = processIncomingMessage;
       socketsPort.postMessage({
         operation: 6, // WorkerMessageOperations.IDENTIFY_DEDICATED_WORKER,
         symbol,

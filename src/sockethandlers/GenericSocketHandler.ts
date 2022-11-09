@@ -1,4 +1,3 @@
-import { SOCKET_THROTTLING_MS } from "../global";
 import ProviderPrice from "./ProviderPrice";
 
 abstract class GenericSocketHandler {
@@ -25,7 +24,7 @@ abstract class GenericSocketHandler {
         this.lastPrice = this.bestPrice;
         updateParent(this.bestPrice);
       }
-    }, SOCKET_THROTTLING_MS);
+    }, 150);
   }
 
   sleep = (ms: number) => {

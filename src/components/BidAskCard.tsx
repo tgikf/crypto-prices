@@ -69,11 +69,16 @@ const BidAskCard = (props: {
             sx={{
               fontSize: "2em",
               lineHeight: "1",
+              fontWeight: "bold",
             }}
           >
             {price.slice(highlightStart, highlightEnd)}
           </Typography>
-          <Typography variant="body2" component="span">
+          <Typography
+            variant="body2"
+            component="span"
+            sx={{ fontWeight: "bold" }}
+          >
             {price.slice(highlightEnd)}
           </Typography>
         </Box>
@@ -94,26 +99,8 @@ const BidAskCard = (props: {
     </Box>
   );
 
-  const spread = (Number(ask) - Number(bid)).toFixed(4);
-
   return (
     <>
-      <Card
-        sx={{
-          margin: "auto",
-          width: "5em",
-          bgcolor: "secondary.light",
-          borderColor: "background.default",
-        }}
-      >
-        <Typography
-          variant="body2"
-          color="background.default"
-          sx={{ textAlign: "center", fontSize: "1em" }}
-        >
-          {spread === "0.0000" ? "n/a" : spread}
-        </Typography>
-      </Card>
       <Card
         sx={{
           display: "flex",

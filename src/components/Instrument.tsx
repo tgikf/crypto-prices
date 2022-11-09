@@ -4,8 +4,10 @@ import CardActions from "@suid/material/CardActions";
 import CardContent from "@suid/material/CardContent";
 import CardHeader from "@suid/material/CardHeader";
 import IconButton from "@suid/material/IconButton";
-import MoreVertIcon from "@suid/icons-material/MoreVert";
+import Chip from "@suid/material/Chip";
 import InfoIcon from "@suid/icons-material/Info";
+import CurrencyBitcoinIcon from "@suid/icons-material/CurrencyBitcoin";
+
 import BidAskCard from "./BidAskCard";
 import Typography from "@suid/material/Typography";
 import { OverlayTrigger, Tooltip } from "solid-bootstrap";
@@ -21,16 +23,15 @@ const Instrument = (props: {
   };
 }) => {
   const { symbol, price } = props;
-
   return (
     <Card sx={{ bgcolor: "background.paper", width: 345, maxHeight: 500 }}>
       <CardHeader
-        avatar={<Avatar sx={{ bgcolor: "text.secondary" }}>SP</Avatar>}
-        action={
-          <IconButton aria-label="settings">
-            <MoreVertIcon />
-          </IconButton>
+        avatar={
+          <Avatar sx={{ bgcolor: "secondary.main" }}>
+            <CurrencyBitcoinIcon />
+          </Avatar>
         }
+        action={<Chip label="SPOT" sx={{ margin: "8px" }} />}
         titleTypographyProps={{ variant: "h6", gutterBottom: false }}
         title={symbol}
         subheader={`${price.providers.length} Providers`}
@@ -52,7 +53,7 @@ const Instrument = (props: {
                     padding: "0.5em",
                   }}
                 >
-                  <Typography variant="body1">{`Order data for ${symbol} has been sourced from ${price.providers.join(
+                  <Typography variant="body1">{`Orders for ${symbol} are sourced from ${price.providers.join(
                     ", "
                   )}`}</Typography>
                 </Card>

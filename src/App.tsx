@@ -14,7 +14,6 @@ const darkTheme = createTheme({
     fontFamily: "Roboto",
     body2: {
       fontSize: "1.2rem",
-      fontWeight: "bold",
       fontFamily: "Noto Sans",
       letterSpacing: "0px",
     },
