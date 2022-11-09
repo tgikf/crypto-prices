@@ -5,6 +5,7 @@ import Box from "@suid/material/Box";
 import WorkerMessageOperations from "./WorkerMessageOperations";
 import OrderHistory from "./components/OrderHistory";
 import ButtonPanel from "./components/ButtonPanel";
+import Grid from "@suid/material/Grid";
 
 const darkTheme = createTheme({
   palette: {
@@ -41,7 +42,7 @@ const App = () => {
     date: Date,
     pair: string,
     price: string,
-    buySell: "buy"
+    buySell: "buy" | "sell"
   ) => setOrders([...orders(), { date, pair, price, buySell }]);
 
   /*const orders = [
@@ -117,33 +118,44 @@ const App = () => {
   return (
     <ThemeProvider theme={darkTheme}>
       <Box
-        sx={{
-          minHeight: "100vh",
-          bgcolor: "background.default",
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "space-evenly",
-        }}
+        sx={{ flexGrow: 1, bgcolor: "background.default", minHeight: "100vh" }}
       >
-        <ButtonPanel
-          spawnWorker={spawnInstrumentWorker}
-          terminateWorker={terminateInstrumentWorker}
-          workerExists={(symbol) => instrumentWorkers[symbol] !== undefined}
-        />
+        <Grid container padding={2} spacing={2}>
+          <Grid
+            item
+            sm={12}
+            md={6}
+            justifyContent="space-around"
+            alignItems="center"
+            direction="row"
+          >
+            <ButtonPanel
+              spawnWorker={spawnInstrumentWorker}
+              terminateWorker={terminateInstrumentWorker}
+              workerExists={(symbol) => instrumentWorkers[symbol] !== undefined}
+            />
+          </Grid>
+          <Grid item sm={12} md={6}>
+            <OrderHistory orders={orders()} />
+          </Grid>
+        </Grid>
+
         <Box
           sx={{
             display: "flex",
-            justifyContent: "center",
             flexWrap: "wrap",
-            gap: "1rem",
+            gap: 2,
+            justifyContent: "center",
+            marginTop: 10,
           }}
         >
           {Object.entries(instruments()).map(([key, value]) =>
-            value ? <Instrument symbol={key} price={value} /> : <></>
+            value ? (
+              <Instrument symbol={key} price={value} placeOrder={placeOrder} />
+            ) : (
+              <></>
+            )
           )}
-        </Box>
-        <Box sx={{ alignSelf: "center" }}>
-          <OrderHistory orders={[]} />
         </Box>
       </Box>
     </ThemeProvider>

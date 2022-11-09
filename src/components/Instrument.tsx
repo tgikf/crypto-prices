@@ -21,8 +21,16 @@ const Instrument = (props: {
     askProvider: string;
     providers: string[];
   };
+  placeOrder: (
+    date: Date,
+    pair: string,
+    price: string,
+    buySell: "buy" | "sell"
+  ) => void;
 }) => {
-  const { symbol, price } = props;
+  const { symbol, price, placeOrder } = props;
+  const submitOrder = (price: string, buySell: "buy" | "sell") =>
+    placeOrder(new Date(), symbol, price, buySell);
   return (
     <Card sx={{ bgcolor: "background.paper", width: 345, maxHeight: 500 }}>
       <CardHeader
@@ -38,7 +46,7 @@ const Instrument = (props: {
         subheaderTypographyProps={{ variant: "body1" }}
       />
       <CardContent>
-        <BidAskCard price={price} />
+        <BidAskCard price={price} placeOrder={submitOrder} />
       </CardContent>
       <CardActions disableSpacing>
         {price.providers.length > 0 && (

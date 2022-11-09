@@ -17,8 +17,7 @@ const ButtonPanel = (props: {
     <Card
       sx={{
         bgcolor: "background.paper",
-        minWidth: 400,
-        maxWidth: 1000,
+        minWidth: 290,
         maxHeight: 500,
       }}
     >

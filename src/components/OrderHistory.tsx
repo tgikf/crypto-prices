@@ -19,9 +19,14 @@ const OrderHistory = (props: {
     buySell: string;
   }[];
 }) => {
-  const { orders } = props;
   return (
-    <Card sx={{ bgcolor: "background.paper", width: 690, maxHeight: 500 }}>
+    <Card
+      sx={{
+        bgcolor: "background.paper",
+        minWidth: 290,
+        height: 400,
+      }}
+    >
       <CardHeader
         titleTypographyProps={{ variant: "h6", gutterBottom: false }}
         title="Order History"
@@ -29,9 +34,12 @@ const OrderHistory = (props: {
         subheaderTypographyProps={{ variant: "body1" }}
       />
       <CardContent>
-        {orders.length > 0 ? (
-          <TableContainer component={Paper} sx={{ bgcolor: "" }}>
-            <Table sx={{ minWidth: 400 }}>
+        {props.orders.length > 0 ? (
+          <TableContainer
+            component={Paper}
+            sx={{ bgcolor: "", maxHeight: 300 }}
+          >
+            <Table size="small" stickyHeader sx={{ minWidth: 400 }}>
               <TableHead>
                 <TableRow>
                   <TableCell>Date/Time</TableCell>
@@ -41,7 +49,7 @@ const OrderHistory = (props: {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {orders.map((order, i) => (
+                {props.orders.map((order, i) => (
                   <TableRow
                     sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
                   >
@@ -57,7 +65,9 @@ const OrderHistory = (props: {
             </Table>
           </TableContainer>
         ) : (
-          <Typography variant="h5">Mytext </Typography>
+          <Typography variant="h6" align="center">
+            No orders
+          </Typography>
         )}
       </CardContent>
     </Card>

@@ -12,14 +12,15 @@ const BidAskCard = (props: {
     ask: string;
     askProvider: string;
   };
+  placeOrder: (price: string, buySell: "buy" | "sell") => void;
 }) => {
   let {
     price: { bid, bidProvider, ask, askProvider },
   } = props;
+  const { placeOrder } = props;
 
   const [highlightStart, highlightEnd, cutoff] = evaluatePrice(bid, ask);
   if (cutoff) {
-    console.debug("cutting", bid, ask);
     bid = bid.slice(0, cutoff);
     ask = ask.slice(0, cutoff);
   }
@@ -48,7 +49,7 @@ const BidAskCard = (props: {
           backgroundColor: "text.primary",
         },
       }}
-      onClick={() => console.log("placed offer for", type, " at ", price)}
+      onClick={() => placeOrder(price, type === "bid" ? "sell" : "buy")}
     >
       {highlightStart && highlightEnd ? (
         <Box>
@@ -97,7 +98,7 @@ const BidAskCard = (props: {
         sx={{
           display: "flex",
           justifyContent: "space-around",
-          height: "6rem",
+          height: 90,
         }}
       >
         {renderPrice(bid, bidProvider, "bid")}
