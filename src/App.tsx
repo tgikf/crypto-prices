@@ -121,42 +121,50 @@ const App = () => {
         sx={{ flexGrow: 1, bgcolor: "background.default", minHeight: "100vh" }}
       >
         <Grid container padding={2} spacing={2}>
-          <Grid
-            item
-            sm={12}
-            md={6}
-            justifyContent="space-around"
-            alignItems="center"
-            direction="row"
-          >
-            <ButtonPanel
-              spawnWorker={spawnInstrumentWorker}
-              terminateWorker={terminateInstrumentWorker}
-              workerExists={(symbol) => instrumentWorkers[symbol] !== undefined}
-            />
+          <Grid item sm={12} md={6} lg={4}>
+            <Box
+              sx={{
+                display: "flex",
+                flexWrap: "wrap",
+                gap: 2,
+                justifyContent: "center",
+                marginTop: 10,
+              }}
+            >
+              <ButtonPanel
+                spawnWorker={spawnInstrumentWorker}
+                terminateWorker={terminateInstrumentWorker}
+                workerExists={(symbol) =>
+                  instrumentWorkers[symbol] !== undefined
+                }
+              />
+              <OrderHistory orders={orders()} />
+            </Box>
           </Grid>
-          <Grid item sm={12} md={6}>
-            <OrderHistory orders={orders()} />
+          <Grid item sm={12} md={6} lg={8}>
+            <Box
+              sx={{
+                display: "flex",
+                flexWrap: "wrap",
+                gap: 2,
+                justifyContent: "center",
+                marginTop: 10,
+              }}
+            >
+              {Object.entries(instruments()).map(([key, value]) =>
+                value ? (
+                  <Instrument
+                    symbol={key}
+                    price={value}
+                    placeOrder={placeOrder}
+                  />
+                ) : (
+                  <></>
+                )
+              )}
+            </Box>
           </Grid>
         </Grid>
-
-        <Box
-          sx={{
-            display: "flex",
-            flexWrap: "wrap",
-            gap: 2,
-            justifyContent: "center",
-            marginTop: 10,
-          }}
-        >
-          {Object.entries(instruments()).map(([key, value]) =>
-            value ? (
-              <Instrument symbol={key} price={value} placeOrder={placeOrder} />
-            ) : (
-              <></>
-            )
-          )}
-        </Box>
       </Box>
     </ThemeProvider>
   );

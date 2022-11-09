@@ -11,13 +11,23 @@ const ButtonPanel = (props: {
   workerExists: (symbol: string) => boolean;
 }) => {
   const { spawnWorker, terminateWorker, workerExists } = props;
-  const supportedSymbols = ["BTCEUR", "ETHBTC", "BTCUSDT", "ETHUSD", "ETHUSDT"];
+  const supportedSymbols = [
+    "BTCEUR",
+    "ETHBTC",
+    "BTCUSDT",
+    "ETHUSD",
+    "ETHUSDT",
+    "XRPUSD",
+    "XRPUSDT",
+    "DOGEUSDT",
+  ];
 
   return (
     <Card
       sx={{
         bgcolor: "background.paper",
-        minWidth: 290,
+        minWidth: 310,
+        width: "95%",
         maxHeight: 500,
       }}
     >

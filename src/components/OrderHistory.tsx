@@ -24,7 +24,8 @@ const OrderHistory = (props: {
       sx={{
         bgcolor: "background.paper",
         minWidth: 290,
-        height: 400,
+        maxHeight: 650,
+        width: "95%",
       }}
     >
       <CardHeader
@@ -37,7 +38,7 @@ const OrderHistory = (props: {
         {props.orders.length > 0 ? (
           <TableContainer
             component={Paper}
-            sx={{ bgcolor: "", maxHeight: 300 }}
+            sx={{ bgcolor: "", maxHeight: 500 }}
           >
             <Table size="small" stickyHeader sx={{ minWidth: 400 }}>
               <TableHead>
@@ -56,8 +57,8 @@ const OrderHistory = (props: {
                     <TableCell scope="row">
                       {new Date(order.date).toLocaleTimeString()}
                     </TableCell>
-                    <TableCell>{order.buySell}</TableCell>
                     <TableCell>{order.pair}</TableCell>
+                    <TableCell>{order.buySell}</TableCell>
                     <TableCell align="right">{order.price}</TableCell>
                   </TableRow>
                 ))}
