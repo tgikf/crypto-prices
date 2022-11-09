@@ -4,6 +4,7 @@ import Box from "@suid/material/Box";
 import Button from "@suid/material/Button";
 import Input from "@suid/material/Input";
 import evaluatePrice from "./utils/utils";
+import { Show } from "solid-js";
 
 const BidAskCard = (props: {
   price: {
@@ -51,7 +52,14 @@ const BidAskCard = (props: {
       }}
       onClick={() => placeOrder(price, type === "bid" ? "sell" : "buy")}
     >
-      {highlightStart && highlightEnd ? (
+      <Show
+        when={highlightStart && highlightEnd}
+        fallback={
+          <Typography variant="body2" component="span">
+            {price}
+          </Typography>
+        }
+      >
         <Box>
           <Typography variant="body2" component="span">
             {price.slice(0, highlightStart)}
@@ -75,11 +83,7 @@ const BidAskCard = (props: {
             {price.slice(highlightEnd)}
           </Typography>
         </Box>
-      ) : (
-        <Typography variant="body2" component="span">
-          {price}
-        </Typography>
-      )}
+      </Show>
       <Typography
         variant="body1"
         sx={{

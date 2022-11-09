@@ -9,7 +9,7 @@ import TableContainer from "@suid/material/TableContainer";
 import TableHead from "@suid/material/TableHead";
 import TableRow from "@suid/material/TableRow";
 import Typography from "@suid/material/Typography";
-import { For } from "solid-js";
+import { For, Show } from "solid-js";
 
 const OrderHistory = (props: {
   orders: {
@@ -35,7 +35,14 @@ const OrderHistory = (props: {
         subheaderTypographyProps={{ variant: "body1" }}
       />
       <CardContent>
-        {props.orders.length > 0 ? (
+        <Show
+          when={props.orders.length > 0}
+          fallback={
+            <Typography variant="h6" align="center">
+              No orders
+            </Typography>
+          }
+        >
           <TableContainer
             component={Paper}
             sx={{ bgcolor: "", maxHeight: 500 }}
@@ -50,28 +57,28 @@ const OrderHistory = (props: {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {props.orders.map((order, i) => (
-                  <TableRow
-                    sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
-                  >
-                    <TableCell scope="row">
-                      {`${new Date(order.date).toLocaleDateString()} ${new Date(
-                        order.date
-                      ).toLocaleTimeString()}`}
-                    </TableCell>
-                    <TableCell>{order.pair}</TableCell>
-                    <TableCell>{order.buySell}</TableCell>
-                    <TableCell align="right">{order.price}</TableCell>
-                  </TableRow>
-                ))}
+                <For each={props.orders}>
+                  {(order) => (
+                    <TableRow
+                      sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
+                    >
+                      <TableCell scope="row">
+                        {`${new Date(
+                          order.date
+                        ).toLocaleDateString()} ${new Date(
+                          order.date
+                        ).toLocaleTimeString()}`}
+                      </TableCell>
+                      <TableCell>{order.pair}</TableCell>
+                      <TableCell>{order.buySell}</TableCell>
+                      <TableCell align="right">{order.price}</TableCell>
+                    </TableRow>
+                  )}
+                </For>
               </TableBody>
             </Table>
           </TableContainer>
-        ) : (
-          <Typography variant="h6" align="center">
-            No orders
-          </Typography>
-        )}
+        </Show>
       </CardContent>
     </Card>
   );

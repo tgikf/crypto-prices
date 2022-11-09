@@ -4,6 +4,7 @@ import CardContent from "@suid/material/CardContent";
 import CardHeader from "@suid/material/CardHeader";
 import Typography from "@suid/material/Typography";
 import Switch from "@suid/material/Switch";
+import { For } from "solid-js";
 
 const ButtonPanel = (props: {
   spawnWorker: (symbol: string) => void;
@@ -47,36 +48,38 @@ const ButtonPanel = (props: {
             padding: "1rem 0 1rem 0",
           }}
         >
-          {supportedSymbols.map((symbol) => (
-            <Box
-              sx={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                padding: "0 0 0 0.5rem",
-                border: 1,
-                borderColor: "primary.main",
-                borderRadius: 1,
-                width: "8rem",
-              }}
-            >
-              <Typography
-                variant="button"
-                color="text.secondary"
-                sx={{ paddingTop: "0.1rem" }}
+          <For each={supportedSymbols}>
+            {(symbol) => (
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  padding: "0 0 0 0.5rem",
+                  border: 1,
+                  borderColor: "primary.main",
+                  borderRadius: 1,
+                  width: "8rem",
+                }}
               >
-                {symbol}
-              </Typography>
-              <Switch
-                value={symbol}
-                onChange={() =>
-                  workerExists(symbol)
-                    ? terminateWorker(symbol)
-                    : spawnWorker(symbol)
-                }
-              />
-            </Box>
-          ))}
+                <Typography
+                  variant="button"
+                  color="text.secondary"
+                  sx={{ paddingTop: "0.1rem" }}
+                >
+                  {symbol}
+                </Typography>
+                <Switch
+                  value={symbol}
+                  onChange={() =>
+                    workerExists(symbol)
+                      ? terminateWorker(symbol)
+                      : spawnWorker(symbol)
+                  }
+                />
+              </Box>
+            )}
+          </For>
         </Box>
       </CardContent>
     </Card>

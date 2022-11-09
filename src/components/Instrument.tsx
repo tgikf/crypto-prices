@@ -10,7 +10,8 @@ import CurrencyBitcoinIcon from "@suid/icons-material/CurrencyBitcoin";
 
 import BidAskCard from "./BidAskCard";
 import Typography from "@suid/material/Typography";
-import { OverlayTrigger, Tooltip } from "solid-bootstrap";
+import { createSignal, Index } from "solid-js";
+import Popper from "@suid/material/Popper";
 
 const Instrument = (props: {
   symbol: string;
@@ -29,8 +30,14 @@ const Instrument = (props: {
   ) => void;
 }) => {
   const { symbol, price, placeOrder } = props;
+
+  const [anchorEl, setAnchorEl] = createSignal<HTMLElement | null>(null);
+  const open = () => !!anchorEl();
+  const id = () => (open() ? "simple-popper" : undefined);
+
   const submitOrder = (price: string, buySell: "buy" | "sell") =>
     placeOrder(new Date(), symbol, price, buySell);
+
   return (
     <Card sx={{ bgcolor: "background.paper", width: 345, maxHeight: 500 }}>
       <CardHeader
@@ -49,30 +56,32 @@ const Instrument = (props: {
         <BidAskCard price={price} placeOrder={submitOrder} />
       </CardContent>
       <CardActions disableSpacing>
-        {price.providers.length > 0 && (
-          <OverlayTrigger
-            placement="bottom"
-            overlay={
-              <Tooltip color="primary" id="info">
-                <Card
-                  sx={{
-                    bgcolor: "secondary.light",
-                    color: "background.default",
-                    padding: "0.5em",
-                  }}
-                >
-                  <Typography variant="body1">{`Orders for ${symbol} are sourced from ${price.providers.join(
-                    ", "
-                  )}`}</Typography>
-                </Card>
-              </Tooltip>
-            }
+        <IconButton
+          aria-label="Info"
+          onMouseEnter={(event) => {
+            setAnchorEl(event.currentTarget);
+          }}
+          onMouseLeave={(event) => {
+            setAnchorEl(null);
+          }}
+        >
+          <InfoIcon />
+        </IconButton>
+        <Popper id={id()} open={open()} anchorEl={anchorEl()}>
+          <Card
+            sx={{
+              bgcolor: "secondary.light",
+              color: "background.default",
+              padding: "0.5em",
+            }}
           >
-            <IconButton aria-label="Info">
-              <InfoIcon />
-            </IconButton>
-          </OverlayTrigger>
-        )}
+            <Typography variant="body1">
+              <Typography variant="body1">{`Orders for ${symbol} are sourced from ${price.providers.join(
+                ", "
+              )}`}</Typography>
+            </Typography>
+          </Card>
+        </Popper>
       </CardActions>
     </Card>
   );

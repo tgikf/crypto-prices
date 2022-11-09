@@ -1,4 +1,4 @@
-import { createSignal } from "solid-js";
+import { createSignal, For } from "solid-js";
 import { ThemeProvider, createTheme } from "@suid/material/styles";
 import Instrument from "./components/Instrument";
 import Box from "@suid/material/Box";
@@ -156,17 +156,19 @@ const App = () => {
                 marginTop: 10,
               }}
             >
-              {Object.entries(instruments()).map(([key, value]) =>
-                value ? (
-                  <Instrument
-                    symbol={key}
-                    price={value}
-                    placeOrder={placeOrder}
-                  />
-                ) : (
-                  <></>
-                )
-              )}
+              <For each={Object.entries(instruments())}>
+                {([key, value]) =>
+                  value ? (
+                    <Instrument
+                      symbol={key}
+                      price={value}
+                      placeOrder={placeOrder}
+                    />
+                  ) : (
+                    <></>
+                  )
+                }
+              </For>
             </Box>
           </Grid>
         </Grid>
