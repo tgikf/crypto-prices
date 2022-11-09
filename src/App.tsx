@@ -57,14 +57,11 @@ const App = () => {
     );
 
     const instrumentWorker = new Worker(
-      new URL("./instrumentWorker.ts", import.meta.url),
-      /* @vite-ignore */
-      { name: `dedicated-${symbol}` }
+      new URL("./instrumentWorker.ts", import.meta.url)
     );
 
     instrumentWorkers[symbol] = instrumentWorker;
 
-    //FIXME websockets need time to initialize, and when initialized upon first call `onmessage` can't be overridden
     instrumentWorker.postMessage(
       {
         operation: WorkerMessageOperations.SHARED_WORKER_PORT,
@@ -78,10 +75,15 @@ const App = () => {
       const { operation, data } = e.data;
       switch (operation) {
         case WorkerMessageOperations.SOCKET_READY:
-          instrumentWorker.postMessage({
-            operation: WorkerMessageOperations.SUBSCRIBE_FEED,
-            symbol,
-          });
+          // FIXME: upon first pair addition, give sockets time to connect
+          const timeout = Object.keys(instruments()).length === 0 ? 1500 : 0;
+          setTimeout(() => {
+            instrumentWorker.postMessage({
+              operation: WorkerMessageOperations.SUBSCRIBE_FEED,
+              symbol,
+            });
+          }, timeout);
+
           break;
         case WorkerMessageOperations.PRICE_UPDATE:
           setInstruments({
