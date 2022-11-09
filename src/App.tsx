@@ -41,7 +41,8 @@ const App = () => {
       return;
     }
     instrumentWorkers[symbol].postMessage({
-      operation: WorkerMessageOperations.TERMINATE_CHILDREN,
+      operation: WorkerMessageOperations.UNSUBSCRIBE_FEED,
+      symbol,
     });
     instrumentWorkers[symbol] = undefined;
     setInstruments({ ...instruments(), [symbol]: undefined });
@@ -51,38 +52,61 @@ const App = () => {
     if (instrumentWorkers[symbol] !== undefined) {
       instrumentWorkers[symbol].terminate();
     }
+    const sharedSocketWorker = new SharedWorker(
+      new URL("./socketWorker.ts", import.meta.url)
+    );
+    console.debug("!!creating instrument worker for", symbol);
 
-    const worker = new Worker(
-      new URL("./instrumentWorker.ts", import.meta.url)
+    const instrumentWorker = new Worker(
+      new URL("./instrumentWorker.ts", import.meta.url),
+      /* @vite-ignore */
+      { name: `dedicated-${symbol}` }
     );
 
-    worker.onmessage = (e) => {
-      const workerMessage = e.data;
-      switch (workerMessage.operation) {
+    instrumentWorkers[symbol] = instrumentWorker;
+
+    //FIXME websockets need time to initialize, and when initialized upon first call `onmessage` can't be overridden
+    instrumentWorker.postMessage(
+      {
+        operation: WorkerMessageOperations.SHARED_WORKER_PORT,
+        symbol: symbol,
+        sharedWorkerPort: sharedSocketWorker.port,
+      },
+      [sharedSocketWorker.port]
+    );
+    /*
+    //TODO can this be replaced with the socket_ready message?
+    setTimeout(
+      () =>
+        instrumentWorker.postMessage({
+          operation: WorkerMessageOperations.SUBSCRIBE_FEED,
+          symbol,
+        }),
+      1000
+    );*/
+
+    instrumentWorker.onmessage = (e) => {
+      const { operation, data } = e.data;
+      switch (operation) {
         case WorkerMessageOperations.SOCKET_READY:
-          worker.postMessage({
+          console.debug("socket ready to subscribe?");
+          instrumentWorker.postMessage({
             operation: WorkerMessageOperations.SUBSCRIBE_FEED,
-            handler: workerMessage.handler,
             symbol,
           });
           break;
         case WorkerMessageOperations.PRICE_UPDATE:
-          setInstruments({ ...instruments(), [symbol]: workerMessage.data });
-          break;
-        case WorkerMessageOperations.TERMINATE_SELF:
-          worker.terminate();
-          instrumentWorkers[symbol] = undefined;
+          console.debug("this symbol is wrong", symbol, "but self is", self);
+          setInstruments({
+            ...instruments(),
+            [symbol]: data,
+          });
           break;
         default:
-          console.error(
-            `App: Received invalid operation ${workerMessage.operation}`,
-            workerMessage
-          );
+          console.error(`App: Received invalid operation ${operation}`, e.data);
           break;
       }
     };
-
-    instrumentWorkers[symbol] = worker;
   };
 
   return (
