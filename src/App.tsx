@@ -91,7 +91,7 @@ const App = () => {
       switch (operation) {
         case WorkerMessageOperations.SOCKET_READY:
           // FIXME: upon first pair addition, give sockets time to connect
-          const timeout = Object.keys(instruments()).length === 0 ? 1500 : 0;
+          const timeout = Object.keys(instruments()).length === 0 ? 2000 : 0;
           setTimeout(() => {
             instrumentWorker.postMessage({
               operation: WorkerMessageOperations.SUBSCRIBE_FEED,
