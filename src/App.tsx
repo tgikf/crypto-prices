@@ -21,8 +21,6 @@ const darkTheme = createTheme({
   },
 });
 
-const instrumentWorkers: Worker[] = [];
-
 const App = () => {
   const [instruments, setInstruments] = createSignal<{
     [symbol: string]: {
@@ -33,6 +31,8 @@ const App = () => {
       providers: string[];
     };
   }>({});
+
+  const [socketReady, setSocketReady] = createSignal<boolean>(false);
 
   const [orders, setOrders] = createSignal<
     { date: Date; pair: string; price: string; buySell: string }[]
@@ -45,76 +45,56 @@ const App = () => {
     buySell: "buy" | "sell"
   ) => setOrders([...orders(), { date, pair, price, buySell }]);
 
-  /*const orders = [
-    { date: Date.now(), pair: "BTCEUR", price: "18300.312", buySell: "Buy" },
-    { date: Date.now(), pair: "ETHUSDT", price: "2000.0012", buySell: "Buy" },
-    { date: Date.now(), pair: "BTCETH", price: "8.014", buySell: "Sell" },
-  ];*/
+  let subscribedSymbols: string[] = [];
+  const sharedSocketWorker = new SharedWorker(
+    new URL("./socketWorker.ts", import.meta.url)
+  );
 
-  const terminateInstrumentWorker = (symbol: string) => {
-    if (instrumentWorkers[symbol] === undefined) {
-      return;
+  const instrumentWorker = new Worker(
+    new URL("./instrumentWorker.ts", import.meta.url)
+  );
+
+  instrumentWorker.postMessage(
+    {
+      operation: WorkerMessageOperations.SHARED_WORKER_PORT,
+      sharedWorkerPort: sharedSocketWorker.port,
+    },
+    [sharedSocketWorker.port]
+  );
+
+  instrumentWorker.onmessage = (e) => {
+    const { operation, symbol, data } = e.data;
+    switch (operation) {
+      case WorkerMessageOperations.SOCKET_READY:
+        console.debug("sockets ready");
+        setSocketReady(true);
+      case WorkerMessageOperations.PRICE_UPDATE:
+        setInstruments({
+          ...instruments(),
+          ...data,
+        });
+        break;
+      default:
+        console.error(`App: Received invalid operation ${operation}`, e.data);
+        break;
     }
-    instrumentWorkers[symbol].postMessage({
+  };
+
+  const unsubscribeFromSymbol = (symbol: string) => {
+    instrumentWorker.postMessage({
       operation: WorkerMessageOperations.UNSUBSCRIBE_FEED,
       symbol,
     });
-    delete instrumentWorkers[symbol];
+    subscribedSymbols = subscribedSymbols.filter((e) => e !== symbol);
     setInstruments({ ...instruments(), [symbol]: undefined });
   };
 
-  const spawnInstrumentWorker = (symbol: string) => {
-    if (instrumentWorkers[symbol] !== undefined) {
-      instrumentWorkers[symbol].terminate();
-    }
-    const sharedSocketWorker = new SharedWorker(
-      new URL("./socketWorker.ts", import.meta.url)
-    );
-
-    const instrumentWorker = new Worker(
-      new URL("./instrumentWorker.ts", import.meta.url)
-    );
-
-    instrumentWorkers[symbol] = instrumentWorker;
-
-    instrumentWorker.postMessage(
-      {
-        operation: WorkerMessageOperations.SHARED_WORKER_PORT,
-        symbol: symbol,
-        sharedWorkerPort: sharedSocketWorker.port,
-      },
-      [sharedSocketWorker.port]
-    );
-
-    instrumentWorker.onmessage = (e) => {
-      const { operation, data } = e.data;
-      switch (operation) {
-        case WorkerMessageOperations.SOCKET_READY:
-          // FIXME: upon first pair addition, give sockets time to connect
-          const timeout = Object.keys(instruments()).length === 0 ? 2000 : 0;
-          setTimeout(() => {
-            instrumentWorker.postMessage({
-              operation: WorkerMessageOperations.SUBSCRIBE_FEED,
-              symbol,
-            });
-          }, timeout);
-
-          break;
-        case WorkerMessageOperations.PRICE_UPDATE:
-          if (instrumentWorkers[symbol] !== undefined) {
-            setInstruments({
-              ...instruments(),
-              [symbol]: data,
-            });
-          }
-          break;
-        default:
-          console.error(`App: Received invalid operation ${operation}`, e.data);
-          break;
-      }
-    };
+  const subscribeToSymbol = (symbol: string) => {
+    instrumentWorker.postMessage({
+      operation: WorkerMessageOperations.SUBSCRIBE_FEED,
+      symbol,
+    });
   };
-
   return (
     <ThemeProvider theme={darkTheme}>
       <Box
@@ -137,10 +117,11 @@ const App = () => {
               }}
             >
               <ButtonPanel
-                spawnWorker={spawnInstrumentWorker}
-                terminateWorker={terminateInstrumentWorker}
-                workerExists={(symbol) =>
-                  instrumentWorkers[symbol] !== undefined
+                disabled={!socketReady()}
+                subscribeToSymbol={subscribeToSymbol}
+                unsubscribeFromSymbol={unsubscribeFromSymbol}
+                symbolSubscribed={(symbol) =>
+                  subscribedSymbols.includes(symbol)
                 }
               />
               <OrderHistory orders={orders()} />

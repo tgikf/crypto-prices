@@ -7,11 +7,13 @@ import Switch from "@suid/material/Switch";
 import { For } from "solid-js";
 
 const ButtonPanel = (props: {
-  spawnWorker: (symbol: string) => void;
-  terminateWorker: (symbol: string) => void;
-  workerExists: (symbol: string) => boolean;
+  disabled: boolean;
+  subscribeToSymbol: (symbol: string) => void;
+  unsubscribeFromSymbol: (symbol: string) => void;
+  symbolSubscribed: (symbol: string) => boolean;
 }) => {
-  const { spawnWorker, terminateWorker, workerExists } = props;
+  const { subscribeToSymbol, unsubscribeFromSymbol, symbolSubscribed } = props;
+
   const supportedSymbols = [
     "BTCEUR",
     "ETHBTC",
@@ -70,11 +72,12 @@ const ButtonPanel = (props: {
                   {symbol}
                 </Typography>
                 <Switch
+                  disabled={props.disabled}
                   value={symbol}
                   onChange={() =>
-                    workerExists(symbol)
-                      ? terminateWorker(symbol)
-                      : spawnWorker(symbol)
+                    symbolSubscribed(symbol)
+                      ? unsubscribeFromSymbol(symbol)
+                      : subscribeToSymbol(symbol)
                   }
                 />
               </Box>

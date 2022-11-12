@@ -12,12 +12,12 @@ abstract class GenericSocketHandler {
   abstract isRelevant(message: any): boolean;
   abstract updateBestPrice(unformatted: any): void;
 
-  constructor(protected publishUpdate: (message: ProviderPrice) => void) {
+  constructor(publishUpdate: (message: ProviderPrice) => void) {
     /* Socket level throttling: update the parent only if the price has changed and at interval
        To prevent very active sockets from DoS-ing the instrument worker
     */
     setInterval(() => {
-      Object.entries(this.bestPrices).forEach(([key, bestPrice]) => {
+      for (const [, bestPrice] of Object.entries(this.bestPrices)) {
         if (
           bestPrice?.symbol &&
           bestPrice !== this.lastPrice[bestPrice.symbol]
@@ -25,8 +25,8 @@ abstract class GenericSocketHandler {
           this.lastPrice[bestPrice.symbol] = bestPrice;
           publishUpdate(bestPrice);
         }
-      });
-    }, 250);
+      }
+    }, 150);
   }
 
   sleep = (ms: number) => {

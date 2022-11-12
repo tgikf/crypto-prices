@@ -5,12 +5,11 @@ let processSocketEvent;
 let handlers: GenericSocketHandler[] = [];
 const readyHandlers: number[] = [];
 
-const ports = {};
 //@ts-ignore
 self.onconnect = (e) => {
   const port = e.ports[0];
   processSocketEvent = (message: ProviderPrice) => {
-    ports[message.symbol].postMessage(message);
+    port.postMessage(message);
   };
 
   port.onmessage = (e: MessageEvent) => {
@@ -20,17 +19,20 @@ self.onconnect = (e) => {
     };
 
     switch (operation) {
-      case 6: // WorkerMessageOperations.IDENTIFY_DEDICATED_WORKER:
+      /* case 6: // WorkerMessageOperations.IDENTIFY_DEDICATED_WORKER:
         ports[symbol] = port;
-        break;
+        break;*/
       case 1: // WorkerMessageOperations.TERMINATE_CHILDREN:
         handlers.forEach((handler) => handler.close());
         self.close();
         break;
       case 2: // WorkerMessageOperations.SUBSCRIBE_FEED:
-        handlers
-          .filter((h, i) => readyHandlers.includes(i))
-          .forEach((handler) => handler.subscribe(symbol));
+        for (let i = 0; i < handlers.length; i++) {
+          if (readyHandlers.includes(i)) {
+            console.debug("arewehere");
+            handlers[i].subscribe(symbol);
+          }
+        }
         break;
       case 3: // WorkerMessageOperations.UNSUBSCRIBE_FEED:
         handlers.forEach((handler) => handler.unsubscribe(symbol));
