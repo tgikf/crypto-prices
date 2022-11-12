@@ -12,7 +12,7 @@ const ButtonPanel = (props: {
   unsubscribeFromSymbol: (symbol: string) => void;
   symbolSubscribed: (symbol: string) => boolean;
 }) => {
-  const { subscribeToSymbol, unsubscribeFromSymbol, symbolSubscribed } = props;
+  const { subscribeToSymbol, unsubscribeFromSymbol } = props;
 
   const supportedSymbols = [
     "BTCEUR",
@@ -23,6 +23,8 @@ const ButtonPanel = (props: {
     "XRPUSD",
     "XRPUSDT",
     "DOGEUSDT",
+    "ADAUSDT",
+    "SOLUSDT",
   ];
 
   return (
@@ -75,7 +77,7 @@ const ButtonPanel = (props: {
                   disabled={props.disabled}
                   value={symbol}
                   onChange={() =>
-                    symbolSubscribed(symbol)
+                    props.symbolSubscribed(symbol)
                       ? unsubscribeFromSymbol(symbol)
                       : subscribeToSymbol(symbol)
                   }

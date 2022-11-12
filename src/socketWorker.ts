@@ -29,13 +29,16 @@ self.onconnect = (e) => {
       case 2: // WorkerMessageOperations.SUBSCRIBE_FEED:
         for (let i = 0; i < handlers.length; i++) {
           if (readyHandlers.includes(i)) {
-            console.debug("arewehere");
             handlers[i].subscribe(symbol);
           }
         }
         break;
       case 3: // WorkerMessageOperations.UNSUBSCRIBE_FEED:
-        handlers.forEach((handler) => handler.unsubscribe(symbol));
+        for (let i = 0; i < handlers.length; i++) {
+          if (readyHandlers.includes(i)) {
+            handlers[i].unsubscribe(symbol);
+          }
+        }
         break;
       default:
         console.error(`socketWorker: Received invalid operation ${operation}`);

@@ -33,7 +33,7 @@ const App = () => {
   }>({});
 
   const [socketReady, setSocketReady] = createSignal<boolean>(false);
-
+  const [subscribedSymbols, setSubscribedSymbols] = createSignal<string[]>([]);
   const [orders, setOrders] = createSignal<
     { date: Date; pair: string; price: string; buySell: string }[]
   >([]);
@@ -45,7 +45,6 @@ const App = () => {
     buySell: "buy" | "sell"
   ) => setOrders([...orders(), { date, pair, price, buySell }]);
 
-  let subscribedSymbols: string[] = [];
   const sharedSocketWorker = new SharedWorker(
     new URL("./socketWorker.ts", import.meta.url)
   );
@@ -63,15 +62,18 @@ const App = () => {
   );
 
   instrumentWorker.onmessage = (e) => {
-    const { operation, symbol, data } = e.data;
+    const { operation, data } = e.data;
     switch (operation) {
       case WorkerMessageOperations.SOCKET_READY:
-        console.debug("sockets ready");
         setSocketReady(true);
       case WorkerMessageOperations.PRICE_UPDATE:
+        const newData = {};
+        for (const symbol of subscribedSymbols()) {
+          newData[symbol] = data[symbol];
+        }
         setInstruments({
           ...instruments(),
-          ...data,
+          ...newData,
         });
         break;
       default:
@@ -80,21 +82,23 @@ const App = () => {
     }
   };
 
-  const unsubscribeFromSymbol = (symbol: string) => {
-    instrumentWorker.postMessage({
-      operation: WorkerMessageOperations.UNSUBSCRIBE_FEED,
-      symbol,
-    });
-    subscribedSymbols = subscribedSymbols.filter((e) => e !== symbol);
-    setInstruments({ ...instruments(), [symbol]: undefined });
-  };
-
   const subscribeToSymbol = (symbol: string) => {
+    setSubscribedSymbols([...subscribedSymbols(), symbol]);
     instrumentWorker.postMessage({
       operation: WorkerMessageOperations.SUBSCRIBE_FEED,
       symbol,
     });
   };
+
+  const unsubscribeFromSymbol = (symbol: string) => {
+    instrumentWorker.postMessage({
+      operation: WorkerMessageOperations.UNSUBSCRIBE_FEED,
+      symbol,
+    });
+    setSubscribedSymbols(subscribedSymbols().filter((e) => e !== symbol));
+    setInstruments({ ...instruments(), [symbol]: undefined });
+  };
+
   return (
     <ThemeProvider theme={darkTheme}>
       <Box
@@ -120,9 +124,9 @@ const App = () => {
                 disabled={!socketReady()}
                 subscribeToSymbol={subscribeToSymbol}
                 unsubscribeFromSymbol={unsubscribeFromSymbol}
-                symbolSubscribed={(symbol) =>
-                  subscribedSymbols.includes(symbol)
-                }
+                symbolSubscribed={(symbol) => {
+                  return subscribedSymbols().includes(symbol);
+                }}
               />
               <OrderHistory orders={orders()} />
             </Box>

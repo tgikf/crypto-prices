@@ -99,9 +99,13 @@ onmessage = (e: MessageEvent) => {
         operation: 6, // WorkerMessageOperations.IDENTIFY_DEDICATED_WORKER,
         symbol,
       });*/
-      self.postMessage({
-        operation: 0, // WorkerMessageOperations.SOCKET_READY,
-      });
+      setTimeout(
+        () =>
+          self.postMessage({
+            operation: 0, // WorkerMessageOperations.SOCKET_READY,
+          }),
+        2500
+      );
       break;
     case 2: // WorkerMessageOperations.SUBSCRIBE_FEED:
       socketsPort.postMessage({ operation, symbol });
